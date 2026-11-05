@@ -1,0 +1,992 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ATS Food · Dağıtım Planlama (demo)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito+Sans:wght@400;600;700;800&display=swap">
+<style>
+:root{
+  color-scheme:light;
+  --bg:#F3F5F8; --surface:#FFFFFF; --surface2:#F7F9FB; --line:#DDE3EA; --line2:#EDF1F5;
+  --ink:#1A2433; --ink2:#4F5B6B; --ink3:#7A8899;
+  --bar:#13233A; --bar-ink:#FFFFFF; --bar-ink2:#C9D3E0;
+  --accent:#0B5F66; --accent-ink:#FFFFFF; --accent-soft:#DCEFF1; --accent-soft2:#EEF7F8;
+  --warn:#B45309; --warn-soft:#FBE3CF; --warn-bg:#FFF4E5;
+  --bad:#8A1F11; --bad-soft:#F8D7D3;
+  --good:#2F5A1D; --good-soft:#E4F2DD; --good-bg:#EEF7F1; --good-line:#9CCDB3;
+  --info:#1C4A8F; --info-soft:#DCE7F8;
+  --chip:#E6EAF0; --chip-ink:#344051; --purple:#4C2A73; --purple-soft:#EDE4F5;
+  --focus:#1C4A8F;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0F1621; --surface:#172030; --surface2:#1D2838; --line:#2B3747; --line2:#243041;
+    --ink:#E8EDF3; --ink2:#AEB9C7; --ink3:#7E8BA0;
+    --bar:#0B1424; --bar-ink:#FFFFFF; --bar-ink2:#AEB9C7;
+    --accent:#5FC2C9; --accent-ink:#06282B; --accent-soft:#163C40; --accent-soft2:#132E32;
+    --warn:#F0B268; --warn-soft:#4A2E0F; --warn-bg:#2E2213;
+    --bad:#F09A8F; --bad-soft:#4A1A14;
+    --good:#A6D98F; --good-soft:#1F3617; --good-bg:#17281B; --good-line:#3C6B47;
+    --info:#8FB4F0; --info-soft:#1C2E4A;
+    --chip:#2A3546; --chip-ink:#C9D3E0; --purple:#C9A8F0; --purple-soft:#33244A;
+    --focus:#8FB4F0;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0F1621; --surface:#172030; --surface2:#1D2838; --line:#2B3747; --line2:#243041;
+  --ink:#E8EDF3; --ink2:#AEB9C7; --ink3:#7E8BA0;
+  --bar:#0B1424; --bar-ink:#FFFFFF; --bar-ink2:#AEB9C7;
+  --accent:#5FC2C9; --accent-ink:#06282B; --accent-soft:#163C40; --accent-soft2:#132E32;
+  --warn:#F0B268; --warn-soft:#4A2E0F; --warn-bg:#2E2213;
+  --bad:#F09A8F; --bad-soft:#4A1A14;
+  --good:#A6D98F; --good-soft:#1F3617; --good-bg:#17281B; --good-line:#3C6B47;
+  --info:#8FB4F0; --info-soft:#1C2E4A;
+  --chip:#2A3546; --chip-ink:#C9D3E0; --purple:#C9A8F0; --purple-soft:#33244A;
+  --focus:#8FB4F0;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+body{margin:0;height:100%;font-family:'Nunito Sans',system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg);font-size:14px;line-height:1.45}
+*,*::before,*::after{box-sizing:inherit}
+a{color:var(--accent)}
+button{font:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bar);z-index:10}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;display:flex;flex-wrap:wrap;align-items:center;gap:18px;min-height:54px;padding:0 20px;background:var(--bar);color:var(--bar-ink)}
+.brand{font-weight:800;letter-spacing:.1em;font-size:14px}
+.crumb{font-size:13px;color:var(--bar-ink2)}
+.crumb b{color:var(--bar-ink)}
+.top .right{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--bar-ink2)}
+.top .right button{background:transparent;border:1px solid rgba(255,255,255,.3);color:var(--bar-ink);border-radius:6px;padding:6px 12px;min-height:34px;cursor:pointer}
+.top .right button.solvi{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:800}
+.app{display:flex;align-items:stretch;min-height:calc(100% - 54px)}
+.side{flex:0 0 232px;background:var(--surface);border-right:1px solid var(--line);padding:14px 10px 30px}
+.side .logo{display:flex;align-items:center;min-height:54px;padding:6px 12px 10px;border-bottom:1px solid var(--line);margin:-14px -10px 6px}
+.side .logo a{display:flex;align-items:center;text-decoration:none}
+.side .logo img{height:26px;width:auto;display:block}
+.side .wordmark{font-weight:800;font-size:22px;letter-spacing:-.01em;color:var(--accent)}
+.side .grp{margin-bottom:4px}
+.side .grp.on .navh{color:var(--accent)}
+.side .navh{font-size:12px;font-weight:800;color:var(--ink3);padding:12px 12px 4px}
+.side a{display:block;padding:9px 12px;border-radius:6px;font-size:14px;color:var(--ink);text-decoration:none}
+.side a:hover{background:var(--surface2)}
+.side a.on{background:var(--accent-soft);color:var(--accent);font-weight:800}
+.side .dim{color:var(--ink3);cursor:default}
+.side .dim:hover{background:transparent}
+.content{flex:1 1 auto;min-width:0;padding:24px 28px 56px;display:flex;flex-direction:column;gap:18px}
+.head{display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:flex-start}
+h1{margin:0;font-size:24px;font-weight:800;line-height:1.2}
+h2{margin:0 0 4px;font-size:15px;font-weight:800}
+.sub{margin:6px 0 0;color:var(--ink2);max-width:860px}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font-size:13px;font-weight:700;padding:9px 14px;min-height:40px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn:hover{background:var(--surface2)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.pri:hover{filter:brightness(1.05)}
+.btn[disabled]{opacity:.5;cursor:default}
+.btn.sm{padding:5px 10px;min-height:30px;font-size:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px;min-width:0}
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+.kl{font-size:12px;font-weight:800;color:var(--ink2)}
+.kv{font-size:21px;font-weight:800;margin-top:4px;white-space:nowrap}
+.ks{font-size:12px;color:var(--ink2);margin-top:2px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;min-width:0}
+.tbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--line)}
+.tbar .muted{font-size:13px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{text-align:left;font-size:12px;font-weight:800;color:var(--ink2);padding:9px 10px;border-bottom:1px solid var(--line);background:var(--surface2);white-space:nowrap}
+th.n,td.n{text-align:right;font-variant-numeric:tabular-nums}
+td{padding:8px 10px;border-bottom:1px solid var(--line2);vertical-align:middle;white-space:nowrap}
+tr.click{cursor:pointer}
+tr.click:hover td{background:var(--surface2)}
+tr.sel td{background:var(--accent-soft2)}
+tr.tot td{font-weight:800;border-top:1px solid var(--line)}
+.muted{color:var(--ink2)}
+.hl{font-weight:800;color:var(--accent)}
+.cap{font-weight:800;color:var(--warn)}
+.up{font-weight:800;color:var(--info)}
+.dn{font-weight:800;color:var(--bad)}
+.foot{padding:11px 14px;font-size:12.5px;color:var(--ink2);line-height:1.5;border-top:1px solid var(--line2)}
+.flag{display:inline-block;border-radius:10px;padding:2px 8px;font-size:11px;font-weight:800;white-space:nowrap}
+.f-tr{background:var(--warn-soft);color:var(--warn)}
+.f-dp{background:var(--bad-soft);color:var(--bad)}
+.f-pr{background:var(--accent-soft);color:var(--accent)}
+.f-lb{background:var(--good-soft);color:var(--good)}
+.f-ed{background:var(--info-soft);color:var(--info)}
+.b{display:inline-block;padding:2px 8px;border-radius:10px;font-size:12px;font-weight:800;white-space:nowrap}
+.b-a{background:var(--accent-soft);color:var(--accent)}
+.b-b{background:var(--info-soft);color:var(--info)}
+.b-c{background:var(--chip);color:var(--chip-ink)}
+.b-p{background:var(--purple-soft);color:var(--purple)}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{font-size:13px;font-weight:700;padding:7px 13px;min-height:38px;border:0;border-right:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--accent);color:var(--accent-ink)}
+.ctl{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
+.f label{display:block;font-size:12px;font-weight:800;color:var(--ink2);margin-bottom:4px}
+.f input,.f select{font:inherit;font-size:13px;padding:7px 10px;min-height:38px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);min-width:120px}
+.f input[type=number]{width:120px}
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:10px}
+.steps div{background:var(--surface2);border:1px solid var(--line);border-radius:6px;padding:11px;font-size:13px;line-height:1.45}
+.steps b{display:block;margin-bottom:2px}
+.steps div.ok{border-color:var(--good-line);background:var(--good-bg)}
+.steps div.warn{border-color:var(--warn);background:var(--warn-bg)}
+.two{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:14px}
+.two.eq{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.calc{display:grid;grid-template-columns:minmax(0,1fr) 90px;font-size:13px}
+.calc div{padding:6px 10px;border-bottom:1px solid var(--line2)}
+.calc .g{grid-column:1 / span 2;font-size:12px;font-weight:800;color:var(--ink2);background:var(--surface2)}
+.calc .v{text-align:right;font-variant-numeric:tabular-nums}
+.calc .tot{font-weight:800;background:var(--warn-bg)}
+.grid3{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));font-size:13px;border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-top:8px}
+.grid3 div{padding:7px 10px;border-bottom:1px solid var(--line2);border-right:1px solid var(--line2);font-variant-numeric:tabular-nums}
+.grid3 .h{font-size:12px;font-weight:800;color:var(--ink2);background:var(--surface2)}
+.grid3 .pick{background:var(--accent-soft2);font-weight:800}
+.tl{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-top:8px}
+.tl div{padding:9px 11px;font-size:12px;border-right:1px solid var(--line);background:var(--surface);line-height:1.4}
+.tl div:last-child{border-right:0}
+.tl b{display:block;font-size:14px}
+.tl .now{background:var(--accent-soft)}
+.ev{display:grid;grid-template-columns:70px minmax(0,1fr) 110px;font-size:13px;max-height:360px;overflow:auto}
+.ev div{padding:7px 10px;border-bottom:1px solid var(--line2)}
+.ev .h{font-size:12px;font-weight:800;color:var(--ink2);background:var(--surface2);position:sticky;top:0}
+.ev .r{text-align:right;font-variant-numeric:tabular-nums}
+.ev .now{background:var(--accent-soft);font-weight:800}
+.bars{display:grid;grid-template-columns:120px minmax(0,1fr) 54px;gap:8px 12px;align-items:center;font-size:13px}
+.bar{height:12px;background:var(--chip);border-radius:4px;overflow:hidden}
+.bar span{display:block;height:100%;background:var(--accent)}
+.bar span.w{background:var(--warn)}
+.mob{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:12px;max-width:290px}
+.mob .st{font-size:15px;font-weight:800;margin-top:4px}
+.mob .ln{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line2);font-size:13px}
+svg text{font-family:inherit}
+.chartbox{padding:8px 12px 2px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
+.toast.on{opacity:1}
+/* Solvi drawer */
+.solvi{position:fixed;top:calc(54px + env(safe-area-inset-top,0px));right:0;bottom:0;width:400px;max-width:100%;background:var(--surface);border-left:1px solid var(--line);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .22s;z-index:15}
+.solvi.open{transform:none}
+.solvi .hd{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.solvi .hd b{font-size:15px}
+.solvi .hd .st{font-size:12px;color:var(--ink2)}
+.solvi .hd button{margin-left:auto}
+.solvi .log{flex:1 1 auto;overflow:auto;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:92%;padding:9px 12px;border-radius:10px;font-size:13.5px;line-height:1.5;white-space:pre-wrap}
+.msg.u{align-self:flex-end;background:var(--accent-soft);color:var(--ink)}
+.msg.a{align-self:flex-start;background:var(--surface2);border:1px solid var(--line)}
+.msg.a.think{color:var(--ink2);font-style:italic}
+.solvi .qs{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 8px}
+.solvi .qs button{font-size:12px;padding:5px 9px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.solvi .in{display:flex;gap:8px;padding:10px 14px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line)}
+.solvi .in input{flex:1 1 auto;font:inherit;padding:9px 11px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);min-width:0}
+.hint{font-size:12px;color:var(--ink3)}
+.scen-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:14px;border:1px solid var(--line);font-size:12px;font-weight:700;background:var(--surface)}
+.pill.on{border-color:var(--accent);background:var(--accent-soft)}
+@media (max-width:1100px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.two,.two.eq{grid-template-columns:minmax(0,1fr)}.steps{grid-template-columns:repeat(2,minmax(0,1fr))}.tl{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:760px){.app{flex-direction:column}.side{flex:none;border-right:0;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:4px;padding:8px}.side .navh{display:none}.side a{padding:7px 10px;font-size:13px}.content{padding:16px 14px 40px}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.steps{grid-template-columns:minmax(0,1fr)}.tl{grid-template-columns:repeat(2,minmax(0,1fr))}.solvi{width:100%}.grid3{grid-template-columns:repeat(5,minmax(0,1fr));font-size:11px}}
+@media (prefers-reduced-motion: reduce){.solvi,.toast{transition:none}}
+
+/* ===== Dragon görünümü ===== */
+body{font-family:'Inter','Nunito Sans',system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:13.5px}
+:root{--bar:#262A3B;--side:#2B3443;--side2:#34495A;--side-ink:#D7DEEA;--side-ink2:#9AA7B8;--cyan:#10B5D4;--teal2:#08ABA0}
+.top{background:var(--bar);min-height:56px;gap:14px;padding:0 18px}
+.top .tgl,.top .ico{background:transparent;border:0;color:#C9D3E0;padding:6px;border-radius:6px;cursor:pointer;display:inline-flex;min-height:0}
+.top .tgl:hover,.top .ico:hover{background:rgba(255,255,255,.08)}
+.crumb{font-size:13.5px;color:#AEB9C7}.crumb b{color:#fff;font-weight:600}
+.top .right{gap:8px}
+.top .pill{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.08);color:#D7DEEA;border-radius:14px;padding:5px 12px;font-size:12px}
+.top .pill i{width:7px;height:7px;border-radius:50%;background:#2ECC71;display:inline-block}
+.top .right button.solvi{background:transparent;border:0;color:#D7DEEA;font-weight:600;display:inline-flex;align-items:center;gap:6px;padding:6px 10px;min-height:0}
+.top .right button.solvi:hover{background:rgba(255,255,255,.08)}
+.ic{width:16px;height:16px;flex:0 0 16px}
+.side{flex:0 0 220px;background:var(--side);border-right:0;padding:0 0 30px;color:var(--side-ink)}
+.top .logo{width:202px;margin-left:-18px;padding:0 16px;display:flex;align-items:center;align-self:stretch;flex:0 0 auto}
+.top .logo img{height:24px;width:auto;display:block}
+.top .logo a{display:flex}
+@media (max-width:760px){.top .logo{width:auto;margin-left:0;padding:0}}
+.side .user{display:flex;gap:10px;align-items:center;padding:12px 14px;background:var(--side2)}
+.side .av{width:34px;height:34px;border-radius:50%;background:var(--teal2);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:13px}
+.side .un{font-weight:700;font-size:13px;color:#fff}.side .ue{font-size:11px;color:var(--side-ink2)}.side .ur{font-size:11px;color:var(--cyan)}
+.side .cust{display:flex;align-items:center;gap:8px;background:#ECEFF6;color:#1A2433;font-weight:600;font-size:13px;padding:9px 14px}
+.side .cb{width:18px;height:18px;border-radius:50%;background:var(--teal2);color:#fff;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.side .grp{margin:0}
+.side .gh{width:100%;display:flex;align-items:center;gap:10px;background:transparent;border:0;color:var(--side-ink);font:inherit;font-weight:600;font-size:13.5px;padding:11px 14px;cursor:pointer;text-align:left}
+.side .gh:hover{background:rgba(255,255,255,.05)}
+.side .gh .chev{margin-left:auto;transition:transform .15s}
+.side .grp.open .gh .chev{transform:rotate(180deg)}
+.side .gi{display:none}
+.side .grp.open .gi{display:block}
+.side .gi a{display:flex;align-items:center;gap:9px;padding:8px 14px 8px 24px;border-radius:0;font-size:13px;color:var(--side-ink);border-left:3px solid transparent}
+.side .gi a .ic{color:var(--side-ink2)}
+.side .gi a:hover{background:rgba(255,255,255,.05)}
+.side .gi a.on{background:rgba(255,255,255,.10);color:#fff;font-weight:600;border-left-color:var(--cyan)}
+.side .gi a.on .ic{color:#fff}
+.side a.dim{color:var(--side-ink2)}
+.side a.dim:hover{background:transparent}
+.app.collapsed .side{display:none}
+.content{background:#F5F7FA;padding:22px 26px 56px}
+h1{font-size:22px;font-weight:700}
+.sub{font-size:13.5px}
+.kl{font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:600;color:var(--ink2)}
+.f label{font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+th{font-size:11px;letter-spacing:.04em;text-transform:uppercase;font-weight:600}
+.card,.panel{border-radius:10px;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+.kv{font-size:24px}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .content{background:var(--bg)}}
+:root[data-theme="dark"] .content{background:var(--bg)}
+@media (max-width:760px){.side{display:none}.app.showside .side{display:block;flex:none}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="logo"><a href="#yuk"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAAAeCAYAAADTsBuJAAAOvklEQVR4nO2a2XNb53mHn+9gJ1aCJMB9E0VSojaKkq3Fiyw7sZvYlWs7ad2kHc/kojPtRae97X+QmU47nU4bd9KJZzyZZqnt2ErSLLWtWIocWRKplZskUiDFDSSxA8QBcM7bC4AQKVmKe+E4i34zuMH5cN59/aC29B/gAT47aJ81A3/osH6SQ0oBKHw+L+3treLxelCaQl/LMz+/yNLSshIRROTT5fb3EPc1gFIKh9NB//Y+efzZZzDr6omk0hRKZvk5sMvrps4sypUPTnP6g9Mqk85gmuZvgvffC9zTAHa7jd0PDUnL0F56B/ppCfrpbaij0efBZbehUBQNg5VsjhsrMdwNIRqG9srs8AUunjpNPJZQv0lBflehPq4IK6X48it/LtLTw1cP7qWnoQ6bRQOl+DitCmCYJrHsGq99OIwRjfLdf/mGyqQzn7oAv+u4ywBen5ejLx2Tjn1DvDC4nWa/t6z0ivLXlV0sGdhtVixKsTHzrxWK/ODiGLM3Z/nZt15n5uaMelAb7o1NKUgpxUNPPi4dQ4P85YE93Ion+c75y1iVxhO9XexqCXN1IcoPLo2TXNMJed18ee8ACFxdjPLIlg58TgcvDQ7wXo2TxPPPsvTv/0k+n/+s5PutxyYD9PZvle1HH+dL+3aSL5Z49dQ50noBq6Zxdnael/Zs5/jlCfRSCbfdzmw8yVwixeM9nRy/MsGOphA+pwO71cKT/VtYTGfhy8fkzW//tzIM47OS8bcaVQN4PW4e/dMX6W0KE/Z6mI0nyRSKeBx2ekN19IcbmF6Nk87rfPWh3exoCnHm5hxvXRzll9MzAMiGCmGzWDjS28X1xWX6t/XK1Stjd5cPpbA6HNi8XhGjpPRUGimV7j5mseDw+7G6a6SUzSk9kUA2dFqOQACryykiwlp0Wa0/s/t82Nw1AmDousrHE1BJh5rViqM2IEorj0L5WFyZxWKZVm1ArA4Hpdya0pNJRISacFg0iwUQ9ERSFbPZKn2L04kzWCtKaQhCMZNVhVQKi92O3e8TgEIiqYxisUp/kwGUUgzs2SkRQ/j7vm40pWjwuNnRFOL87Dynp2Y5F5kj7PNis1h4elsPDquFek8NPx6dZCaWxOt0AIJA1QydwQDt9UH0h/cxNjqxqT3VrFZC+4ckvG8IzW4HEcnHYsy+d4Ls3LwSw0BpGs6Gemk7ehR3U7g8kIhIbnmZW+++T25hUQE0HTootdv6kFKJy69+E6OS8jytLdLx9OdA0ygkEjL+7f9SRl4HoKaxUXpefB5ltWLoOmOvvY67qVFanziCs76uzKSIpGdmmX33PRUaGqS2rxeUInn9hkwf/1HZ0ErRsHuXNB0+CEph6jqT33tDwg/tp/HhfWg2OwClXE4WPjxD7MpVZW5wMg1A0zRqWls4tmc7Nqul/APTpCPo5+WhnexqCVMwTGK5NUqmyTuXxonn8rx5YZR8sURbrR/DNFnO5FhIpplPplkrFgH4k93bKPoDBIO1VdMrTSO8f580HTyAxeFAKYXSNFz19fS88DwNe3aL0jQCvVtl64sv4GlpQmla9Zw7HKb7+T+mtr9PylOioMrT4qYuLTs3r/RUqjzPBGrxd3fLeuTV796JZrOhgHRkluDAduk+9hyuhvoynQotX2cHfS//mRRSKUq5NZRS+Lu7qO3rlXKUeWkY3I3SNDBNVq+O0fzoYZofOYTF7qi+y+Z20/bkETq+8IxYa2o2R4DNZsPf1MhDHS1VAaZW4rx9aRzDLHt1yTT50uAAb4yM8talMS7OL/Hsjl6W0lkGmkK8/tEF/um90yilME3hrx/bzyNbOqjz1NDd3sqIxw0rq1Xv92/tQWkahq6TuH4DR8CPu6kJMUxyi0toNiutRx7HWuNCDIPUdIRUJIK3ox1/dxe2mhrannqS7PziHWq/jUI6TW5hEWdtLShoPHiA+MQkNo+HQO/WspObJqau0/jwfiw2O4gQm5gku7CIv7sLb3sb1hoX/u5uUpEIdQPbURYLLUceI31rjrajT4jN7QYgt7yCzePG39kBSlFaW2P1ylWUxUJwYDtWu51AzxbWolFZOnNWiUglBVk0QuEQTputynyT30tPQ5CMXqS/sZ5oOku2UODZnb1cmltkfGmFb5w8x1P93YwtLtMaCLCzOcTFuUWWUhkCNa6qR7Y0BPEGAqBm4I6O1CgUycfjJCav4W5uJh2JkJmbU40HHhabuwZEWDxzlsWPzioxDFYuXSa0d1CaHz2MxW6nYe9uuYf+EdMkPnmN4LZ+UApnwI+vs0M8ra2U8zkYuo6yWbHYbBjFArfeP8HqlVEFsHLhIs2PHJbQ0CDOuiDR88O46uupCYewulx0PP2UeFpbq8qOnjtPcyUVZRcXmXr7uCpmyrVi9fIV6XruiziDQQI9PUSHLyCFQjkFKaWoDfjQ1G1JFBDP5THF5GhvF6MLUb4/fJW3L45TW+Pi5X07KRgljl+e4GxkDk2DA12tJNbyPNrTQX+4nvVwd9iseAO+qqeahkFuaQlEsHs9tBw+TOcXniHQswVvezua1Yqvs7MsWD7P0tlzSkolEEEMg+jwiNLjcVBQ09iIUvfeKaYjMyqfSFZ5adg7iH9Ld8VCQnzyGha7HZQiv7JC8sa0QqRKKzY6hlkqoZTCWV/H3AcnMfJ6JT11olmtiGEwf+o0ejKJzeMpG35sgmImy/q71lZWVWrqJgCOYBCtUvyrnG9UPkCd20VfuJ6FZIbvDV+laJjYLBbSus6h7ja+ONDLP3z+MQC662tZzeT45/c/xG238cUdvVi1DUpRqkoQQAyDpTNnVSoyQymXQ0SwOBw464KE9w9Rt3OHqEotMg1jU8ezrjizVG5rlabulYHKvy+ViJ49V+0+fB3tOIO1ABiFAtFzw2q9EzINE+6gZRql6qSpWSxk5xdU4saNTWdSkRkSE5PlUVUpEDArNXATz5XvNvKslZ8J6Wxu0zbTomkc6m6naBiMzC7gdznZVvHqJp8XATxOB5pStNX6eap/C7HsGsd29dNW699AGAzDJJu53bYBFLNZYldHmXrnh8z8/H9ve5qm4WlprkaIze0uF7x1B1EKX1enOOuCAORj8bsNdIfgies3lJ5K3/UoeWOKQjpNIZUCEVx1QZz1dVVaStPwd3aKZrUiQC4axSwVWblw6XY7KcLy8AilfB5D11VpLY/SFN7OjmqaA7DWuHC3tpRlT2cQUzYYwBSWl1cp3SHIjqYQzQEfhmny3I5eBppDaJrGP753mkgswb/+4lcAHOpupyMYQCnY1tiwKZoEYTWVIbkau92DWyw0HT4oHc98nkBfH2vRKPGJyWr7qFmtLA9fwCyWQ7/t6BFCewfFEQzSMLhbOp/9QjX0Vy9f2VBXFDafV+w+Hxs/FrudzOzsph7cLJVIXLuOmCbpmVlMw8DqctF97DmC27eJq6FeQkN7pemRQyiLRjGdJjs3rxAoZrNKqvJBIVPeeRUzGdaiUQBqe7fS8fTnxNXQIDXhsHQ8/XnxtraACOmZGcxSORqsAEapyMrcApPRVfa2N1cjWtMUrzy8h48it3hsaydFw+D6cowzN2/x9Z+f4mBXG0/2bWFnc5iplRiHuzvwOOybjJgvlhifjlDI5arf2QMBqdsxgLJYCA3uJjS4q6pAMU2yS1H0eFwt/OqMNB06gMXppPWJx2k98ljVO81ikaWz58jOL6j6XTsFQLNZ6f+Lr6yPI7eVXdBZ+PAMpmGgWcuzZyGZJLe4pBAheWNKrV4ZlfpdO7C6XHT+0dMV1ZZpiWESPT+Cvl5L7gGjUGDxo7O4QiHsXg+12/qp7e8rv6nCdz4WZ3nkImKUnV0DKJUM8gsLvDUyuikNKWBPayNfOzRUGbTA73LwyoFBcoUi/zN6jUvzS5gibA3V8TePPVTtftZx6sYMpUSCRCxeDQs9HldzJz7ALBQqXlnOm4iQX11l5eIlJaZJ9PywunXiFxjVc1Tyf4m5k6dY/OisQirarhQ7RTkNb/ygFOmZ2XKEVc6lpiNVzzVLJW69f0LNnzx1m1aFn2I2y9Q7x1keuaBupzqpvufOyTY7v6Amv/t9lV1YqOpSUe7IUpEZJr/7fbW2slLVRXUb2twUlkf/6mu8dGgfg21Nd1lXgB9cHOM75y5ztK+bR7a088bIKJfno/ztEwc4vKX9rloYz63x9Z+dZP6nP+eXJ07dVSptXg++zk6x+7xIyWBtZYX0zIwyixvWEZUhxtPaIjaPh1I2S3r2VnkVIAJK4e/qEmdd7V08r8M0DGJXx5SnpVkcgQAAies3VCGV2nxQKRx+P+6WZrE6HRSzOTKzt1Qxl9ukaIvdTnDHgKxvh+NjY6q0tnnhaLHb8bS2iLMuiAisLS+TnZ/fLBsbdkHzC0sqdX5YfhkO0dMQrHr8bQsIkVgSAV7Ys416t5vQo27+7s2fcC4yx+HuNtiQ+00R3p+cJpzN8M6HZz+2TymmM6xevnL/ixsRipkM8fGJjz8nQnJqSiWn7vsWAJJT07+Wlp5IoCfuf5lkFAosD4/82jPJqWmVnJq+L8lNDfRPfvhTtTA6xrsTUxTv3F4qhcdhwxBhejVBWteJxJMUSsZdxhIRJhZXuHp9mu+8+i10Xb8vE3/I2LSOFhFOvnUcV8BPRi/w4uB2XJXpuFwPmjh5PcJ/nDpH2OdhIZnGbbfxZF9XtcgYIpyZnuXE2HUu//hnxFZjD64m74O7RsiFuQV1/N++yercAq99OExGL2BW8t/etia+sn8Xpgg3V+MoFK8cHKQ9GEBE0EslTkxM8+6lccbffJuRX32kHlzQ3x8feycMEKwLyr7PPUH3/iG6msPsbmmkvdaP3WohoxdI5nX8Tgc1dhvLmSyXbi0xtRJjfOQS4+9/wLXxyQee/wlwTwMAWK1WAsGAHHv5JWzdXcwmM4R9Hlr8PqwWxWpmjUgsgctqJVzUefeNt7k2NqkKhcKD/wh9QtzXANVDSlFXF5RtA/14Qw1YXM7KokynmEoxPXmDmzdnlGmaDxT//8QnMsADfHp48N/Qzxj/BxXY9KZupt8BAAAAAElFTkSuQmCC" alt="Solvoyo"></a></div>
+  <button type="button" class="tgl" id="sideTgl" aria-label="Menüyü gizle"><svg class="ic " viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="14" height="12" rx="2"/><path d="M8 4v12"/></svg></button>
+  <div class="crumb" id="crumb">ATS Food / Taze Yönetimi / <b>Araç Yük Planı</b></div>
+  <div class="right">
+    <span class="pill"><i></i>Demo verisi</span>
+    <button type="button" class="solvi" id="solviBtn"><svg class="ic " viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h12v9H9l-4 3v-3H4z"/></svg>Solvi</button>
+    <button type="button" class="ico" id="themeBtn" title="Tema"><svg class="ic " viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="3"/><path d="M10 3v2M10 15v2M3 10h2M15 10h2M5 5l1.5 1.5M13.5 13.5L15 15M5 15l1.5-1.5M13.5 6.5L15 5"/></svg></button>
+    <button type="button" class="ico" title="Çıkış"><svg class="ic " viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4H4v12h5M13 7l3 3-3 3M8 10h8"/></svg></button>
+  </div>
+</header>
+<div class="app">
+  <nav class="side" aria-label="Modül menüsü">
+    
+    <div class="user"><div class="av">GI</div><div><div class="un">gizem.atla</div><div class="ue">gizem.atla@solvoyo.com</div><div class="ur">Supply Chain Director</div></div></div>
+    <div class="cust"><span class="cb">A</span>ATS Food</div>
+    <div class="grp"><button type="button" class="gh"><svg class="ic " viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a7 7 0 0 1 14 0"/><path d="M10 12l3-3"/></svg><span>Control Tower</span><svg class="ic chev" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8l4 4 4-4"/></svg></button><div class="gi"><a class="dim" href="#yuk" title="Demo kapsamı dışında"><svg class="ic " viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 5h10M6 10h10M6 15h10M3 5h.01M3 10h.01M3 15h.01"/></svg><span>Planlama Hikâyesi</span></a><a class="dim" href="#yuk" title="Demo kapsamı dışında"><svg class="ic " viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="5" height="5"/><rect x="12" y="3" width="5" height="5"/><rect x="3" y="12" width="5" height="5"/><rect x="12" y="12" width="5" height="5"/></svg><span>Yönetici Paneli</span></a><a class="dim" href="#yuk" title="Demo kapsamı dışında"><svg class="ic " viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3l8 14H2z"/><path d="M10 9v3M10 15h.01"/></svg><span>İstisna Akışı</span></a><a class="dim" href="#yuk" title="Demo kapsamı dışında"><svg class="ic " viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="12" height="14" rx="1"/><path d="M7 10l2 2 4-4"/></svg><span>Öneri Kabulü</span></a></div></div>
+    <div class="grp"><button type="button" class="gh"><svg class="ic " viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 16h14M5 13l3-4 3 2 4-6"/></svg><span>Talep Planlama</span><svg class="ic chev" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8l4 4 4-4"/></svg></button><div class="gi"><a class="dim" href="#yuk" title="Demo kapsamı dışında"><svg class="ic " viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11c2-5 4-5 6 0s4 5 6 0"/></svg><span>Talep Özeti</span></a><a class="dim" href="#yuk" title="Demo kapsamı dışında"><svg class="ic " viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 16V9M9 16V5M14 16v-5"/></svg><span>Tahmin Doğruluğu</span></a><a class="dim" href="#yuk" title="Demo kapsamı dışında"><svg class="ic " viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11c2-5 4-5 6 0s4 5 6 0"/></svg><span>Kayıp Satış ve Stoksuzluk</span></a><a class="dim" href="#yuk" title="Demo kapsamı dışında"><svg class="ic " viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15l9-9 2 2-9 9H4z"/></svg><span>Tahmin Düzenleme</span></a><a class="dim" href="#yuk" title="Demo kapsamı dışında"><svg class="ic " viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3l2 4 4 .5-3 3 .8 4.5L10 13l-3.8 2 .8-4.5-3-3L8 7z"/></svg><span>Yeni Ürünler</span></a><a class="dim" href="#yuk" title="Demo kapsamı dışında"><svg class="ic " viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h12M4 10h12M4 14h12"/><circle cx="8" cy="6" r="1.5"/><circle cx="12" cy="10" r="1.5"/><circle cx="7" cy="14" r="1.5"/></svg><span>Veri Yönetimi</span></a></div></div>
+    <div class="grp open"><button type="button" class="gh"><svg class="ic " viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 16c0-7 4-11 12-12 0 8-4 12-12 12z"/><path d="M4 16l6-6"/></svg><span>Taze Yönetimi</span><svg class="ic chev" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8l4 4 4-4"/></svg></button><div class="gi"><a class="dim" href="#yuk" title="Demo kapsamı dışında"><svg class="ic " viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a7 7 0 0 1 14 0"/><path d="M10 12l3-3"/></svg><span>Taze Karnesi</span></a><a href="#tahmin" data-v="tahmin"><svg class="ic " viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11c2-5 4-5 6 0s4 5 6 0"/></svg><span>Taze Talep</span></a><a class="dim" href="#yuk" title="Demo kapsamı dışında"><svg class="ic " viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M10 6v4l3 2"/></svg><span>Stok Yaşı ve İndirim</span></a><a href="#yuk" data-v="yuk"><svg class="ic " viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h9v8H3zM12 8h3l2 3v2h-5z"/><circle cx="6" cy="14" r="1.5"/><circle cx="14" cy="14" r="1.5"/></svg><span>Araç Yük Planı</span></a><a href="#rota" data-v="rota"><svg class="ic " viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="5" r="2"/><circle cx="15" cy="15" r="2"/><path d="M7 5h4a3 3 0 0 1 0 6H9a3 3 0 0 0 0 6h4"/></svg><span>Rota · Mağaza Bırakma Planı</span></a><a href="#gunici" data-v="gunici"><svg class="ic " viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5l5-2 4 2 5-2v12l-5 2-4-2-5 2z"/><path d="M8 3v12M12 5v12"/></svg><span>Rota Üzerinde Yeniden Dağıtım</span></a><a href="#gun" data-v="gun"><svg class="ic " viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="3"/><path d="M10 3v2M10 15v2M3 10h2M15 10h2M5 5l1.5 1.5M13.5 13.5L15 15M5 15l1.5-1.5M13.5 6.5L15 5"/></svg><span>Gün Görünümü</span></a><a href="#senaryo" data-v="senaryo"><svg class="ic " viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3l7 4-7 4-7-4z"/><path d="M3 11l7 4 7-4"/></svg><span>Senaryolar</span></a><a class="dim" href="#yuk" title="Demo kapsamı dışında"><svg class="ic " viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10"/></svg><span>Fire ve SKT Riski</span></a></div></div>
+    <div class="grp"><button type="button" class="gh"><svg class="ic " viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7l7-4 7 4v7l-7 4-7-4z"/><path d="M3 7l7 4 7-4M10 11v7"/></svg><span>Envanter ve İkmal</span><svg class="ic chev" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8l4 4 4-4"/></svg></button><div class="gi"><a class="dim" href="#yuk" title="Demo kapsamı dışında"><svg class="ic " viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h2l2 9h8l2-6H6"/><circle cx="8" cy="16" r="1"/><circle cx="14" cy="16" r="1"/></svg><span>Mağaza İkmali</span></a><a class="dim" href="#yuk" title="Demo kapsamı dışında"><svg class="ic " viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7l7-4 7 4v7l-7 4-7-4z"/><path d="M3 7l7 4 7-4M10 11v7"/></svg><span>Envanter Pozisyonu</span></a></div></div>
+  </nav>
+  <main class="content" id="main"></main>
+</div>
+<aside class="solvi" id="solvi" aria-label="Solvi">
+  <div class="hd"><b>Solvi</b><span class="st" id="solviSt">Planlama asistanı</span><button type="button" class="btn sm" id="solviClose">Kapat</button></div>
+  <div class="log" id="solviLog"></div>
+  <div class="qs" id="solviQs"></div>
+  <div class="in"><input id="solviIn" placeholder="Rota 12’ye neden 9 kasa yükledik?" aria-label="Solvi’ye soru"><button type="button" class="btn pri" id="solviSend">Sor</button><button type="button" class="btn" id="solviStop" hidden>Durdur</button></div>
+</aside>
+<div class="toast" id="toast"></div>
+<script>
+/* Sunucuya konulurken: Solvi için isteğe bağlı vekil adresi (bkz. solvi-proxy.js). Boş bırakılırsa Solvi sayfanın kendi hesabından cevap verir. */
+window.SOLVI_ENDPOINT = window.SOLVI_ENDPOINT || '';
+/* ===================== Yardımcılar ===================== */
+const TR = n => Number(n).toLocaleString('tr-TR');
+const P1 = n => (Math.round(n*10)/10).toLocaleString('tr-TR',{minimumFractionDigits:1,maximumFractionDigits:1});
+const PCT = n => '%'+P1(n*100);
+const money = n => TR(Math.round(n))+' ₼';
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const hhmm = m => { const h=Math.floor(m/60), mm=m%60; return (h<10?'0':'')+h+':'+(mm<10?'0':'')+mm; };
+function mulberry(seed){ let t=seed>>>0; return function(){ t+=0x6D2B79F5; let r=Math.imul(t^(t>>>15),1|t); r^=r+Math.imul(r^(r>>>7),61|r); return ((r^(r>>>14))>>>0)/4294967296; }; }
+function gauss(rnd){ let u=0,v=0; while(u===0)u=rnd(); while(v===0)v=rnd(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+const phi = z => Math.exp(-0.5*z*z)/Math.sqrt(2*Math.PI);
+function Phi(z){ const t=1/(1+0.2316419*Math.abs(z)); const d=0.3989423*Math.exp(-z*z/2); let p=d*t*(0.3193815+t*(-0.3565638+t*(1.781478+t*(-1.821256+t*1.330274)))); return z>0?1-p:p; }
+function PhiInv(p){ p=clamp(p,0.001,0.999); const a=[-39.6968302866538,220.946098424521,-275.928510446969,138.357751867269,-30.6647980661472,2.50662827745924]; const b=[-54.4760987982241,161.585836858041,-155.698979859887,66.8013118877197,-13.2806815528857]; const c=[-0.00778489400243029,-0.322396458041136,-2.40075827716184,-2.54973253934373,4.37466414146497,2.93816398269878]; const d=[0.00778469570904146,0.32246712907004,2.445134137143,3.75440866190742]; const pl=0.02425,ph=1-pl; let q,r; if(p<pl){q=Math.sqrt(-2*Math.log(p));return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);} if(p<=ph){q=p-0.5;r=q*q;return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);} q=Math.sqrt(-2*Math.log(1-p)); return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1); }
+// Normal talep için beklenen fazla (iade) ve eksik (yok satma)
+function expOver(q,mu,sg){ if(sg<=0.01) return Math.max(q-mu,0); const z=(q-mu)/sg; return sg*(z*Phi(z)+phi(z)); }
+function expShort(q,mu,sg){ if(sg<=0.01) return Math.max(mu-q,0); const z=(q-mu)/sg; return sg*(phi(z)-z*(1-Phi(z))); }
+// En büyük kalan yöntemiyle tam sayıya yuvarlayıp toplamı sabitle
+function roundToSum(vals,target){ const fl=vals.map(v=>Math.max(0,Math.floor(v))); let s=fl.reduce((a,b)=>a+b,0); const rem=vals.map((v,i)=>[v-Math.floor(v),i]).sort((a,b)=>b[0]-a[0]); let i=0; while(s<target && rem.length){ fl[rem[i%rem.length][1]]++; s++; i++; } i=0; const ord=vals.map((v,i)=>[v-Math.floor(v),i]).sort((a,b)=>a[0]-b[0]); while(s>target && ord.length){ const k=ord[i%ord.length][1]; if(fl[k]>0){fl[k]--;s--;} i++; if(i>vals.length*50)break; } return fl; }
+
+/* ===================== Veri ===================== */
+const SKUS=[
+  {id:'corek',  name:'Çörek 500 g', crate:12, price:1.20, cost:0.70, shelf:72,  share:1.00},
+  {id:'kruvasan',name:'Kruvasan',   crate:10, price:1.60, cost:0.90, shelf:72,  share:0.55},
+  {id:'kek',    name:'Kek dilim',   crate:15, price:0.90, cost:0.50, shelf:120, share:0.28},
+  {id:'kete',   name:'Kete',        crate:10, price:1.40, cost:0.80, shelf:120, share:0.12},
+  {id:'tart',   name:'Tart',        crate:8, price:2.20, cost:1.30, shelf:72,  share:0.06},
+];
+const CHANNELS={zincir:{label:'Zincir',cls:'b-a',mult:2.6,cv:0.11,minF:0.30},bakkal:{label:'Bakkal',cls:'b-c',mult:1.0,cv:0.21,minF:0.25},xsm:{label:'XSM',cls:'b-b',mult:1.5,cv:0.17,minF:0.25},horeca:{label:'HoReCa',cls:'b-p',mult:1.6,cv:0.14,minF:0.30}};
+const REGIONS=['Sumqayıt 1-ci mkr','Sumqayıt Nəsimi','Bakı Nəsimi','Sumqayıt Dənizkənarı','Sumqayıt Xəzər','Xırdalan Şərq','Xırdalan','Abşeron Masazır','Abşeron Saray','Bakı Nərimanov','Bakı Binəqədi','Sumqayıt Merkez','Bakı Sabunçu','Bakı Xətai','Bakı Nizami','Bakı Səbail','Bakı Suraxanı','Bakı Qaradağ','Bakı Xəzər','Bakı Pirallahı','Bakı Yasamal','Bakı Əhmədli','Bakı 20 Yanvar','Bakı Gənclik','Bakı Elmlər','Bakı Bakıxanov','Bakı Mərdəkan','Bakı Buzovna','Bakı Bilgəh','Bakı Qala','Bakı Lökbatan','Bakı Hövsan','Bakı Badamdar','Bakı Yeni Yasamal','Bakı Qaraçuxur','Bakı Zabrat','Bakı Maştağa','Bakı Şüvəlan','Bakı Novxanı','Xırdalan Qərb','Sumqayıt Sülh','Abşeron Mehdiabad','Abşeron Ceyranbatan','Abşeron Görədil','Sumqayıt Corat','Sumqayıt Hacı Zeynalabdin','Quba','Xaçmaz','Şamaxı','Şəki','Gəncə Kəpəz','Gəncə Nizami','Mingəçevir','Lənkəran','Şirvan','Göyçay'];
+const STREETS=['Sülh küç.','Nizami küç.','Bakı pr.','Lenin pr.','76-cı məhəllə','Nəsimi küç.','28 May','Füzuli küç.','Azadlıq pr.','H. Əliyev pr.','Vurğun küç.','Səməd Vurğun','Təbriz küç.','Ş. Qurbanov','Mir Cəlal'];
+
+function buildData(seed){
+  const rnd=mulberry(seed);
+  const routes=[];
+  let chainCounter={A:0,B:0,C:0}, cafe=0, xsm=0;
+  for(let r=0;r<56;r++){
+    const n=40+Math.floor(rnd()*11);
+    const stores=[];
+    for(let s=0;s<n;s++){
+      const u=rnd(); const ch = u<0.18?'zincir':u<0.72?'bakkal':u<0.85?'xsm':'horeca';
+      let name;
+      if(ch==='zincir'){ const L=['A','B','C'][Math.floor(rnd()*3)]; chainCounter[L]++; name='Zincir '+L+' · '+REGIONS[r].split(' ')[0]+' '+chainCounter[L]; }
+      else if(ch==='bakkal'){ name='Bakkal · '+STREETS[Math.floor(rnd()*STREETS.length)]+' '+(1+Math.floor(rnd()*40)); }
+      else if(ch==='xsm'){ xsm++; name='XSM '+xsm+' · '+STREETS[Math.floor(rnd()*STREETS.length)]; }
+      else { cafe++; name='Kafe '+cafe+' · '+STREETS[Math.floor(rnd()*STREETS.length)]; }
+      const fu=rnd(); const freq = fu<0.70?1:fu<0.90?2:3; // 1 günlük, 2 gün aşırı, 3 iki günde bir
+      const visitedToday = freq===1 || rnd()<(freq===2?0.5:0.5);
+      const base=(ch==='bakkal'?9+rnd()*10:ch==='zincir'?22+rnd()*20:12+rnd()*14);
+      const skus={};
+      SKUS.forEach(k=>{
+        const mu=Math.max(0.6, base*k.share*(0.7+rnd()*0.6));
+        const cv=CHANNELS[ch].cv;
+        const sg=mu*cv;
+        const hist=[]; // son 7 gün: teslim, iade
+        let zeroStreak=0;
+        for(let d=0;d<7;d++){ const del=Math.max(1,Math.round(mu*(0.84+rnd()*0.52))); const dem=Math.max(0,Math.round(mu+gauss(rnd)*sg)); const ret=Math.max(0,del-dem); hist.push({del,ret}); }
+        for(let d=6;d>=0;d--){ if(hist[d].ret===0) zeroStreak++; else break; }
+        const sell7 = hist.reduce((a,h)=>a+(h.del-h.ret),0)/7;
+        skus[k.id]={mu,sg,hist,zeroStreak,sell7,yDel:hist[6].del,yRet:hist[6].ret};
+      });
+      stores.push({idx:s, name, ch, freq, visitedToday, skus, closedProb:0.03, shelfProb:0.06, overrideProb:0.06});
+    }
+    routes.push({id:r+1, name:'Rota '+(r+1)+' · '+REGIONS[r], region:REGIONS[r], stores, dayLen:(10.2+rnd()*1.3)*60});
+  }
+  return routes;
+}
+const ROUTES=buildData(20261105);
+const TOTAL_STORES=ROUTES.reduce((a,r)=>a+r.stores.length,0);
+
+// Günlük tahmin: mağaza × ürün (perşembe etkisi, hava)
+const DOW=1.06; const WEATHER=1.0;
+function forecastOf(st,k){ const d=st.skus[k.id]; let f=d.mu*DOW*WEATHER; if(d.zeroStreak>=3) f*=1.06; return {mu:f, sg:d.sg*DOW}; }
+function minOf(st,k){ const d=forecastOf(st,k); const floor = st.ch==='zincir'?2:1; return Math.max(floor, Math.round(d.mu*CHANNELS[st.ch].minF)); }
+
+/* ===================== Plan motoru ===================== */
+const METHODS={
+  min:  {label:'Önce minimum, sonra tahmin', short:'Minimum + tahmin'},
+  bugun:{label:'Bugünkü uygulama (dünkü teslimat oranı)', short:'Bugünkü uygulama'},
+  marj: {label:'Marj dengesi (iade – yok satma)', short:'Marj dengesi'},
+  adil: {label:'Adil pay (7 gün ortalamasıyla eşit karşılama)', short:'Adil pay'},
+};
+const DEFAULT_PARAMS={method:'min', returnTarget:0.09, capacity:165, shortfall:2500, production:null, overrideAllowed:true};
+// Hedef iade oranını veren güvenlik katsayısı (tüm mağaza × ürün üstünde iki kesme yöntemiyle)
+function zForTarget(target){ const cells=[]; ROUTES.forEach(r=>r.stores.forEach(st=>{ if(!st.visitedToday)return; SKUS.forEach(k=>{ const f=forecastOf(st,k); cells.push([f.mu,f.sg]); }); })); const rate=z=>{ let o=0,q=0; for(const [mu,sg] of cells){ const qq=Math.max(0,mu+z*sg); o+=expOver(qq,mu,sg); q+=qq; } return q?o/q:0; }; let lo=-2.5,hi=2.5; for(let i=0;i<40;i++){ const mid=(lo+hi)/2; if(rate(mid)>target)hi=mid; else lo=mid; } return (lo+hi)/2; }
+const zCache=new Map();
+function baseProduction(target,z){ // tahmin + iade hedefinden türetilen güvenlik payı
+  const p={}; SKUS.forEach(k=>{ let s=0; ROUTES.forEach(r=>r.stores.forEach(st=>{ if(!st.visitedToday)return; const f=forecastOf(st,k); s+=Math.max(0,f.mu+z*f.sg); })); p[k.id]=Math.round(s/10)*10; }); p._z=z; return p;
+}
+
+function computePlan(params){
+  const P=Object.assign({},DEFAULT_PARAMS,params||{});
+  // Güvenlik katsayısını bu yöntemle beklenen iade hedefe oturacak şekilde kalibre et (eksik üretim yokken)
+  const ck=Math.round(P.returnTarget*1000); let z=zCache.get(ck);
+  if(z==null){ z=zForTarget(P.returnTarget); for(let i=0;i<4;i++){ const trial=computePlanCore(Object.assign({},P,{method:'min',shortfall:0,production:null}),z); const d=trial.tot.retRate-P.returnTarget; if(Math.abs(d)<0.003)break; z-=d/0.11; } zCache.set(ck,z); }
+  return computePlanCore(P,z);
+}
+function computePlanCore(P,z){
+  const PLAN_PROD=baseProduction(P.returnTarget,z); const planSum0=SKUS.reduce((a,k)=>a+PLAN_PROD[k.id],0);
+  const prod={}; SKUS.forEach(k=>{ prod[k.id]=Math.max(0, Math.round(PLAN_PROD[k.id]*(1 - (P.shortfall||0)/planSum0))); });
+  if(P.production){ SKUS.forEach(k=>{ if(P.production[k.id]!=null) prod[k.id]=P.production[k.id]; }); }
+  const log=[];
+  const q={}; // q[r][s][k]
+  const notes={};
+  SKUS.forEach(k=>{
+    const cells=[]; // {r,s,min,f,sg,w}
+    ROUTES.forEach((r,ri)=>r.stores.forEach((st,si)=>{ if(!st.visitedToday)return; const f=forecastOf(st,k); const mn=minOf(st,k); const d=st.skus[k.id]; let adj=1; const rr7=d.hist.reduce((a,h)=>a+h.ret,0)/Math.max(1,d.hist.reduce((a,h)=>a+h.del,0)); if(rr7>0.14)adj*=0.92; if(d.zeroStreak>=3)adj*=1.06; cells.push({r:ri,s:si,min:mn,f:f.mu,sg:f.sg,adj,yDel:d.yDel,ch:st.ch,st}); }));
+    const total=prod[k.id];
+    let raw;
+    if(P.method==='bugun'){ const sy=cells.reduce((a,c)=>a+c.yDel,0); raw=cells.map(c=>total*c.yDel/sy); }
+    else if(P.method==='adil'){ const sf=cells.reduce((a,c)=>a+Math.max(0.5,c.st.skus[k.id].sell7),0); raw=cells.map(c=>total*Math.max(0.5,c.st.skus[k.id].sell7)/sf); }
+    else if(P.method==='marj'){ const cr=(k.price-k.cost)/k.price; const zz=PhiInv(cr); const opt=cells.map(c=>Math.max(c.min,c.f+zz*c.sg)); const so=opt.reduce((a,b)=>a+b,0); raw=opt.map(o=>o*total/so); }
+    else { // min + tahmin
+      const smin=cells.reduce((a,c)=>a+c.min,0);
+      if(total<=smin){ raw=cells.map(c=>c.min*total/smin); }
+      else { const R=total-smin; const w=cells.map(c=>Math.max(c.f+z*c.sg-c.min,0.2)*c.adj); const sw=w.reduce((a,b)=>a+b,0); raw=cells.map((c,i)=>c.min+R*w[i]/sw); }
+    }
+    const ints=roundToSum(raw,total);
+    cells.forEach((c,i)=>{ (q[c.r]||(q[c.r]={}))[c.s]||(q[c.r][c.s]={}); q[c.r][c.s][k.id]=ints[i]; });
+  });
+  // Kapasite: rota kasası > 220 ise fazlayı komşu rotaya kaydır
+  const moves=[];
+  const routeCrates = ri => SKUS.reduce((a,k)=>{ let s=0; const rr=q[ri]||{}; Object.values(rr).forEach(c=>s+=c[k.id]||0); return a+Math.ceil(s/k.crate); },0);
+  for(let ri=0;ri<ROUTES.length;ri++){
+    let cr=routeCrates(ri); let guard=0;
+    while(cr>P.capacity && guard<60){
+      // en büyük SKU'dan, minimum üstü bir mağazadan 1 kasa düş
+      const k=SKUS[guard%SKUS.length]; const rr=q[ri]; const keys=Object.keys(rr).sort((a,b)=>(rr[b][k.id]||0)-(rr[a][k.id]||0));
+      let moved=0; for(const s of keys){ const st=ROUTES[ri].stores[s]; const mn=minOf(st,k); const can=Math.max(0,(rr[s][k.id]||0)-mn); if(can<=0)continue; const take=Math.min(can, k.crate-moved); rr[s][k.id]-=take; moved+=take; if(moved>=k.crate)break; }
+      if(moved>0){ // komşu rotaya ver
+        let to=(ri+1)%ROUTES.length; let g2=0; while(routeCrates(to)>=P.capacity && g2<ROUTES.length){ to=(to+1)%ROUTES.length; g2++; }
+        const tr=q[to]; const tkeys=Object.keys(tr).sort((a,b)=>forecastOf(ROUTES[to].stores[b],k).mu-forecastOf(ROUTES[to].stores[a],k).mu);
+        let give=moved; for(const s of tkeys){ if(give<=0)break; tr[s][k.id]=(tr[s][k.id]||0)+1; give--; if(give>0 && tkeys.indexOf(s)===tkeys.length-1){ tr[tkeys[0]][k.id]+=give; give=0; } }
+        moves.push({from:ri,to,sku:k.id,units:moved});
+      }
+      guard++; cr=routeCrates(ri);
+    }
+  }
+  // Değerlendirme
+  const perRoute=[]; let tot={load:0,crates:0,over:0,short:0,margin:0,belowMin:0,minSum:0,fcast:0,sales:0};
+  const perSku={}; SKUS.forEach(k=>perSku[k.id]={load:0,over:0,short:0,fcast:0});
+  ROUTES.forEach((r,ri)=>{
+    const row={ri,id:r.id,name:r.name,load:0,crates:0,over:0,short:0,margin:0,fcast:0,minSum:0,stores:0,yRet:0,yDel:0,belowMin:0,sales:0};
+    r.stores.forEach((st,si)=>{ if(!st.visitedToday)return; row.stores++; SKUS.forEach(k=>{ const qq=(q[ri]&&q[ri][si]&&q[ri][si][k.id])||0; const f=forecastOf(st,k); const ov=expOver(qq,f.mu,f.sg), sh=expShort(qq,f.mu,f.sg); const sales=qq-ov; row.load+=qq; row.over+=ov; row.short+=sh; row.fcast+=f.mu; row.sales+=sales; row.margin+=sales*k.price-qq*k.cost; const mn=minOf(st,k); row.minSum+=mn; if(qq<mn)row.belowMin++; const d=st.skus[k.id]; row.yRet+=d.yRet; row.yDel+=d.yDel; perSku[k.id].load+=qq; perSku[k.id].over+=ov; perSku[k.id].short+=sh; perSku[k.id].fcast+=f.mu; }); });
+    row.crates=routeCrates(ri); row.retRate=row.load?row.over/row.load:0; row.yRetRate=row.yDel?row.yRet/row.yDel:0; row.util=row.crates/P.capacity;
+    row.status = row.util>=0.999?'kapasite': row.retRate>P.returnTarget+0.02?'iade': (row.short/row.fcast)>0.16?'yoksat':'hedef';
+    perRoute.push(row); ['load','crates','over','short','margin','belowMin','minSum','fcast','sales'].forEach(f=>tot[f]+=row[f]);
+  });
+  tot.retRate=tot.load?tot.over/tot.load:0; tot.shortRate=tot.fcast?tot.short/tot.fcast:0; tot.capRoutes=perRoute.filter(x=>x.util>=0.999).length; tot.prod=prod; tot.prodSum=Object.values(prod).reduce((a,b)=>a+b,0); tot.planSum=planSum0; tot.z=z;
+  const yRetAll = ROUTES.reduce((a,r)=>a+r.stores.reduce((b,st)=>b+SKUS.reduce((c,k)=>c+st.skus[k.id].yRet,0),0),0);
+  const yDelAll = ROUTES.reduce((a,r)=>a+r.stores.reduce((b,st)=>b+SKUS.reduce((c,k)=>c+st.skus[k.id].yDel,0),0),0);
+  tot.yRetRate=yRetAll/yDelAll;
+  return {P,q,prod,planProd:PLAN_PROD,perRoute,perSku,tot,moves};
+}
+function storeRow(plan,ri,si){
+  const st=ROUTES[ri].stores[si]; const out={st,skus:{},load:0,over:0,short:0,margin:0};
+  SKUS.forEach(k=>{ const qq=(plan.q[ri]&&plan.q[ri][si]&&plan.q[ri][si][k.id])||0; const f=forecastOf(st,k); const ov=expOver(qq,f.mu,f.sg), sh=expShort(qq,f.mu,f.sg); const mn=minOf(st,k); out.skus[k.id]={q:qq,f:f.mu,sg:f.sg,min:mn,over:ov,short:sh,sales:qq-ov,margin:(qq-ov)*k.price-qq*k.cost,yDel:st.skus[k.id].yDel,yRet:st.skus[k.id].yRet,zero:st.skus[k.id].zeroStreak,sell7:st.skus[k.id].sell7}; out.load+=qq; out.over+=ov; out.short+=sh; out.margin+=out.skus[k.id].margin; });
+  return out;
+}
+/* ===================== Gün içi simülasyon ===================== */
+const dayRet = t => t.planTotal ? (t.ret + t.vrem)/t.planTotal : 0; // gün sonu iade: satılmayan + araçta kalan, yüklenene oranla
+const DAY_START=4*60, DAY_END=16*60;
+function reallocRoute(route, remaining, V, P, factor){ factor=factor||1;
+  // Kalan araç stoğunu kalan mağazalara tamamen dağıt (araçta sıfır), minimum korunur, iade beklentisi tartılır
+  const cur={}; remaining.forEach(si=>cur[si]={});
+  SKUS.forEach(k=>{
+    const v=V[k.id]||0; if(remaining.length===0)return;
+    const cells=remaining.map(si=>{ const st=route.stores[si]; const f0=forecastOf(st,k); const f={mu:f0.mu*factor,sg:f0.sg}; const mn=minOf(st,k); const d=st.skus[k.id]; let adj=1; const rr7=d.hist.reduce((a,h)=>a+h.ret,0)/Math.max(1,d.hist.reduce((a,h)=>a+h.del,0)); if(rr7>0.14)adj*=0.92; if(d.zeroStreak>=3)adj*=1.06; const expRet=expOver(Math.round(f.mu),f.mu,f.sg)/Math.max(1,f.mu); return {si,min:mn,f:f.mu,sg:f.sg,adj:adj*(1-clamp(expRet,0,0.5)),ch:st.ch}; });
+    const smin=cells.reduce((a,c)=>a+c.min,0); let raw;
+    if(v<=smin){ // eksik: zincir ve HoReCa minimumu korunur, bakkal/XSM kısılır
+      const prot=cells.filter(c=>c.ch==='zincir'||c.ch==='horeca'), oth=cells.filter(c=>!(c.ch==='zincir'||c.ch==='horeca'));
+      const sp=prot.reduce((a,c)=>a+c.min,0); const rest=Math.max(0,v-sp); const so=oth.reduce((a,c)=>a+c.min,0);
+      raw=cells.map(c=> (c.ch==='zincir'||c.ch==='horeca') ? (v>=sp?c.min:c.min*v/sp) : (so?c.min*rest/so:0));
+    } else { const R=v-smin; const w=cells.map(c=>Math.max(c.f+0.3*c.sg-c.min,0.2)*c.adj); const sw=w.reduce((a,b)=>a+b,0); raw=cells.map((c,i)=>c.min+R*w[i]/sw); }
+    const ints=roundToSum(raw,v); cells.forEach((c,i)=>cur[c.si][k.id]=ints[i]);
+  });
+  return cur;
+}
+const simCache=new Map();
+function simulate(plan, opts){
+  const O=Object.assign({realloc:true, until:DAY_END},opts||{});
+  const key=plan.key+'|'+O.realloc+'|'+O.until; if(simCache.has(key))return simCache.get(key);
+  const P=plan.P; const res={routes:[],events:[],series:[],until:O.until,realloc:O.realloc};
+  // olayları hazırla
+  const evs=[];
+  ROUTES.forEach((r,ri)=>{
+    const vis=r.stores.map((st,si)=>si).filter(si=>r.stores[si].visitedToday);
+    const step=r.dayLen/vis.length;
+    const rnd=mulberry(777+ri*131);
+    const rf=clamp(1+gauss(rnd)*0.09,0.8,1.22); // rotanın bugünkü talep çarpanı (hava, etkinlik, maaş günü…)
+    const rs={ri,id:r.id,name:r.name,n:vis.length,order:vis,visited:0,V:{},cur:{},delivered:0,planVisited:0,planTotal:0,expRet:0,sales:0,ret:0,lost:0,done:false,lastEvent:null,closed:0,override:0,endTime:DAY_START+r.dayLen,demand:{},deliv:{},rf,pos:[],factor:1,factorFlagged:false};
+    SKUS.forEach(k=>{ rs.V[k.id]=0; }); 
+    vis.forEach(si=>{ rs.cur[si]={}; SKUS.forEach(k=>{ const qq=(plan.q[ri]&&plan.q[ri][si]&&plan.q[ri][si][k.id])||0; rs.cur[si][k.id]=qq; rs.V[k.id]+=qq; rs.planTotal+=qq; }); });
+    rs.initPlan=JSON.parse(JSON.stringify(rs.cur)); rs.V0=Object.assign({},rs.V);
+    vis.forEach((si,i)=>{ const st=r.stores[si]; const dem={}; SKUS.forEach(k=>{ const f=forecastOf(st,k); dem[k.id]=Math.max(0,Math.round(f.mu*rf+gauss(rnd)*f.sg*0.9)); }); const closed=rnd()<st.closedProb; const shelf=rnd()<st.shelfProb?1+Math.floor(rnd()*3):0; const ovr=rnd()<st.overrideProb?(rnd()<0.5?-1:1):0; evs.push({t:Math.round(DAY_START+step*(i+0.6)),ri,si,i,dem,closed,shelf,ovr}); });
+    res.routes.push(rs);
+  });
+  evs.sort((a,b)=>a.t-b.t);
+  let nextSample=DAY_START; const totalV=()=>res.routes.reduce((a,rs)=>a+SKUS.reduce((b,k)=>b+rs.V[k.id],0),0);
+  res.series.push({t:DAY_START,v:totalV()});
+  for(const e of evs){
+    if(e.t>O.until)break;
+    while(nextSample+30<=e.t){ nextSample+=30; res.series.push({t:nextSample,v:totalV()}); }
+    const rs=res.routes[e.ri]; const r=ROUTES[e.ri]; const st=r.stores[e.si]; const cur=rs.cur[e.si]||{}; const notes=[];
+    let sumDel=0, sumPlan=0, sumInit=0;
+    const deliv={};
+    SKUS.forEach(k=>{ let sug=cur[k.id]||0; const init=(rs.initPlan[e.si]||{})[k.id]||0; sumInit+=init; sumPlan+=sug;
+      if(e.closed){ deliv[k.id]=0; return; }
+      if(e.shelf && k.id==='corek' && P.overrideAllowed){ sug=Math.max(0,sug-e.shelf); }
+      if(e.ovr && k.id==='corek' && P.overrideAllowed){ sug=Math.max(0,sug+e.ovr); }
+      const d=Math.min(sug, rs.V[k.id]); deliv[k.id]=d; rs.V[k.id]-=d; sumDel+=d;
+      const sold=Math.min(d,e.dem[k.id]); rs.sales+=sold; rs.ret+=d-sold; rs.lost+=Math.max(0,e.dem[k.id]-d);
+      rs.expRet+=expOver(d,forecastOf(st,k).mu,forecastOf(st,k).sg);
+    });
+    rs.deliv[e.si]=deliv; rs.demand[e.si]=e.dem;
+    if(st.ch==='zincir' && !e.closed){ rs.pos.push({t:e.t,dem:SKUS.reduce((a,k)=>a+Math.min(e.dem[k.id],deliv[k.id]),0),exp:SKUS.reduce((a,k)=>a+Math.min(forecastOf(st,k).mu,deliv[k.id]),0)}); }
+    if(O.realloc){ let obs=0,ex=0; rs.pos.forEach(pz=>{ const w=clamp((e.t-pz.t)/480,0,1); obs+=pz.dem*w; ex+=pz.exp*w; }); rs.factor = ex>=25 ? clamp(obs/ex,0.85,1.18) : 1; }
+    rs.visited++; rs.delivered+=sumDel; rs.planVisited+=sumInit; rs.lastEvent={t:e.t,si:e.si,name:st.name};
+    if(e.closed){ rs.closed++; notes.push('mağaza kapalı — '+sumPlan+' adet rotanın kalan mağazalarına dağıtıldı'); }
+    else { if(e.shelf&&P.overrideAllowed){ rs.override++; notes.push('rafta dünden '+e.shelf+' kaldı, temsilci düzeltti'); } if(e.ovr&&P.overrideAllowed){ rs.override++; notes.push('temsilci '+(e.ovr>0?'+1 (raf boştu)':'−1')); } }
+    delete rs.cur[e.si];
+    const remaining=rs.order.slice(e.i+1);
+    if(remaining.length===0){ rs.done=true; } else if(O.realloc){ const nc=reallocRoute(r,remaining,rs.V,P,rs.factor); rs.cur=nc; if(!rs.factorFlagged && Math.abs(rs.factor-1)>=0.07){ rs.factorFlagged=true; notes.push('zincirlerin gün içi satışı plana göre '+(rs.factor>1?'+':'−')+Math.round(Math.abs(rs.factor-1)*100)+'% → kalan mağazalarda bırakma '+(rs.factor>1?'artırıldı':'kısıldı')); } }
+    // işaretli olaylar
+    const needRem=remaining.reduce((a,si)=>a+SKUS.reduce((b,k)=>b+((rs.initPlan[si]||{})[k.id]||0),0),0);
+    const vrem=SKUS.reduce((b,k)=>b+rs.V[k.id],0);
+    const dev=vrem-needRem;
+    if(notes.length || Math.abs(dev)>=80){ let txt=st.name+' bırakıldı '+sumDel+' / '+sumInit; if(notes.length)txt+=' — '+notes.join('; '); else if(dev>=80) txt+=' — rota plana göre geride, araçta fazla '+dev+' adet, iade uyarısı'; else txt+=' — araçtaki miktar kalan ihtiyacın '+(-dev)+' adet altında, zincir ve HoReCa korundu'; res.events.push({t:e.t,ri:e.ri,route:r.name,txt,vrem,flag: e.closed?'dp': notes.length?'tr': dev>=22?'dp':'ed'}); }
+    else if(res.events.length<4000 && (e.i%7===0)) res.events.push({t:e.t,ri:e.ri,route:r.name,txt:st.name+' bırakıldı '+sumDel+' / '+sumInit+' — rota hedefte',vrem,flag:'lb'});
+  }
+  while(nextSample+30<=O.until){ nextSample+=30; res.series.push({t:nextSample,v:totalV()}); }
+  res.series.push({t:O.until,v:totalV()});
+  // özet
+  res.routes.forEach(rs=>{ const rem=rs.order.filter(si=>rs.cur[si]); rs.remaining=rem.length; rs.needRem=rem.reduce((a,si)=>a+SKUS.reduce((b,k)=>b+((rs.initPlan[si]||{})[k.id]||0),0),0); rs.vrem=SKUS.reduce((b,k)=>b+rs.V[k.id],0); rs.dev=rs.vrem-rs.needRem; rs.progress=rs.visited/rs.n; rem.forEach(si=>{ SKUS.forEach(k=>{ const f=forecastOf(ROUTES[rs.ri].stores[si],k); rs.expRet+=expOver(rs.cur[si][k.id]||0,f.mu,f.sg); }); }); rs.expRetRate=rs.planTotal?rs.expRet/rs.planTotal:0; rs.status = rs.dev>=80?'iade': rs.dev<=-80?'yoksat':'hedef'; });
+  res.tot={visited:res.routes.reduce((a,r)=>a+r.visited,0), delivered:res.routes.reduce((a,r)=>a+r.delivered,0), planVisited:res.routes.reduce((a,r)=>a+r.planVisited,0), vrem:res.routes.reduce((a,r)=>a+r.vrem,0), needRem:res.routes.reduce((a,r)=>a+r.needRem,0), sales:res.routes.reduce((a,r)=>a+r.sales,0), ret:res.routes.reduce((a,r)=>a+r.ret,0), lost:res.routes.reduce((a,r)=>a+r.lost,0), closed:res.routes.reduce((a,r)=>a+r.closed,0), override:res.routes.reduce((a,r)=>a+r.override,0), expRet:res.routes.reduce((a,r)=>a+r.expRet,0), planTotal:res.routes.reduce((a,r)=>a+r.planTotal,0), done:res.routes.filter(r=>r.done).length, riskIade:res.routes.filter(r=>r.status==='iade').length, riskYok:res.routes.filter(r=>r.status==='yoksat').length};
+  res.tot.expRetRate=res.tot.planTotal?res.tot.expRet/res.tot.planTotal:0;
+  res.tot.runs=res.tot.visited;
+  simCache.set(key,res); return res;
+}
+
+/* ===================== Açıklamalar ===================== */
+function explainPlan(plan){
+  const t=plan.tot, P=plan.P, m=P.method;
+  const steps=[];
+  if(m==='min'){
+    steps.push(['1 · Minimum','Her mağazaya önce minimum: '+TR(t.minSum)+' adet ('+TR(TOTAL_STORES)+' mağazanın bugün ziyaret edilen kısmı). Zincirde raf planı, bakkalda ürün başına 1, HoReCa\u2019da sözleşme adedi. Hiçbir mağaza minimumun altına inmez.']);
+    steps.push(['2 · Tahmin','Kalan '+TR(Math.max(0,t.prodSum-t.minSum))+' adet mağaza × ürün günlük tahmine göre; son 7 gün iadesi %14 üstü mağazalar −%8, üç gündür sıfır iade bildirenler +%6 ağırlıkla. Güvenlik payı iade hedefinden ('+PCT(P.returnTarget)+') türetilir.']);
+  } else if(m==='bugun'){
+    steps.push(['1 · Dünkü oran','Üretilen '+TR(t.prodSum)+' adet, her mağazaya dünkü teslimatıyla orantılı dağıtılır — bugün temsilcilerin yaptığı gibi. Minimum ve tahmin kullanılmaz.']);
+    steps.push(['2 · Düzeltme yok','Dünkü iade, sıfır iade serisi, haftanın günü ve hava dikkate alınmaz; dün fazla bırakılan mağazaya bugün de fazla gider.']);
+  } else if(m==='marj'){
+    steps.push(['1 · Mağaza optimumu','Her mağaza × ürün için iade maliyeti ile kaçan satışın marjı dengelenir: kritik oran (fiyat − maliyet) / fiyat. Çörekte %42 → tahminin üstünde az pay, tartta %41.']);
+    steps.push(['2 · Ölçek','Optimumların toplamı üretime sığdırılır ('+TR(t.prodSum)+' adet); minimumun altına inen hücre taban değerine çekilir.']);
+  } else {
+    steps.push(['1 · Eşit karşılama','Her mağaza son 7 gün ortalama satışının aynı oranında ürün alır: '+PCT(t.prodSum/t.fcast)+'. Kanal, haftanın günü ve iade geçmişi ayırt edilmez.']);
+    steps.push(['2 · Düzeltme yok','Dün iadesi yüksek mağaza da düşük mağaza da aynı oranı alır; perşembe etkisi ve sıfır iade serisi kullanılmaz.']);
+  }
+  steps.push(['3 · Kapasite','Rota toplamı kasaya yuvarlanır; 220 kasalık karma yükün bu 5 ürüne ayrılan '+P.capacity+' kasası aşılamaz. '+(plan.moves.length? plan.moves.length+' kaydırma: '+plan.moves.slice(0,3).map(mv=>'Rota '+ROUTES[mv.from].id+' → Rota '+ROUTES[mv.to].id+' '+mv.units+' '+SKUS.find(k=>k.id===mv.sku).name).join('; ')+(plan.moves.length>3?' …':'') : 'kapasite aşan rota yok.')]);
+  steps.push(['4 · Denge','Beklenen gün sonu iade '+PCT(t.retRate)+' (hedef '+PCT(P.returnTarget)+', dün '+PCT(t.yRetRate)+'); beklenen yok satma tahminin '+PCT(t.shortRate)+'\u2019i. '+(t.prodSum<t.planSum? 'Eksik üretim ('+TR(t.planSum-t.prodSum)+' adet) beklenen iadesi en yüksek rotalardan kesildi.':'Üretim plana uygun.')]);
+  return steps;
+}
+function explainStore(plan,ri,si,kid){
+  const k=SKUS.find(x=>x.id===kid); const row=storeRow(plan,ri,si); const s=row.skus[kid]; const st=row.st; const P=plan.P;
+  const rows=[['g','Kullanılan veri'],
+    ['Son 7 gün ortalama satış (teslim − iade)',P1(s.sell7)],
+    ['Son 3 gün iade', st.skus[kid].hist.slice(4).map(h=>h.ret).join(' · ')],
+    ['Dün teslim / iade', s.yDel+' / '+s.yRet],
+    ['Perşembe etkisi','+%6'],['Hava: 19 °C, yağış yok','±0'],
+    ['g','Tahmin'],
+    ['Baz tahmin',P1(st.skus[kid].mu*DOW)],
+    ['Yok satma düzeltmesi (3+ gün sıfır iade)', s.zero>=3?'+'+P1(st.skus[kid].mu*DOW*0.06):'0'],
+    ['tot','Günlük tahmin',P1(s.f)],
+    ['g','Bırakma kararı · '+METHODS[P.method].short]];
+  if(P.method==='min'){ rows.push(['1 · Minimum ('+CHANNELS[st.ch].label+')',s.min]); rows.push(['2 · Tahmine göre ek',Math.max(0,s.q-s.min)]); const yr=s.yDel?s.yRet/s.yDel:0; rows.push(['Ağırlık düzeltmesi', (st.skus[kid].hist.reduce((a,h)=>a+h.ret,0)/Math.max(1,st.skus[kid].hist.reduce((a,h)=>a+h.del,0)))>0.14?'−%8 (7 gün iade yüksek)': s.zero>=3?'+%6 (sıfır iade serisi)':'yok']); }
+  else if(P.method==='bugun'){ rows.push(['Dünkü teslimat',s.yDel]); rows.push(['Üretime göre oran',PCT(plan.tot.prodSum/plan.tot.planSum)]); }
+  else if(P.method==='marj'){ rows.push(['Kritik oran (fiyat−maliyet)/fiyat',PCT((k.price-k.cost)/k.price)]); rows.push(['Optimum (tahmin + z·σ)',P1(s.f+PhiInv((k.price-k.cost)/k.price)*s.sg)]); }
+  else { rows.push(['Karşılama oranı',PCT(plan.tot.prodSum/plan.tot.fcast)]); }
+  rows.push(['tot','Bırakılacak',s.q]);
+  rows.push(['g','Beklenti']); rows.push(['Beklenen iade',P1(s.over)+' ('+PCT(s.q?s.over/s.q:0)+')']); rows.push(['Beklenen yok satma',P1(s.short)]); rows.push(['Beklenen net marj',P1(s.margin)+' ₼']);
+  return rows;
+}
+function tradeTable(plan,ri,si,kid){ const k=SKUS.find(x=>x.id===kid); const s=storeRow(plan,ri,si).skus[kid]; const qs=[Math.max(0,s.q-2),s.q,s.q+2]; return qs.map(q=>{ const ov=expOver(q,s.f,s.sg), sh=expShort(q,s.f,s.sg); return {q,sales:q-ov,over:ov,short:sh,margin:(q-ov)*k.price-q*k.cost,pick:q===s.q}; }); }
+/* ===================== Durum ===================== */
+const S={params:Object.assign({},DEFAULT_PARAMS),view:'yuk',route:12,store:null,sku:'corek',simT:9*60+42,realloc:true,playing:false,cut:'14:00',scenarios:[],showAll:false};
+try{ const saved=JSON.parse(localStorage.getItem('ats-demo')||'{}'); if(saved.params)S.params=Object.assign({},DEFAULT_PARAMS,saved.params); if(saved.scenarios)S.scenarios=saved.scenarios; if(saved.route)S.route=saved.route; }catch(e){}
+function persist(){ try{ localStorage.setItem('ats-demo',JSON.stringify({params:S.params,scenarios:S.scenarios,route:S.route})); }catch(e){} }
+const planCache=new Map();
+function getPlan(params){ const p=params||S.params; const key=JSON.stringify(p); if(planCache.has(key))return planCache.get(key); const pl=computePlan(p); pl.key=key; planCache.set(key,pl); return pl; }
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('on'),2200); }
+const $=sel=>document.querySelector(sel);
+const statusFlag=s=>({hedef:'<span class="flag f-lb">Hedefte</span>',iade:'<span class="flag f-dp">İade riski</span>',yoksat:'<span class="flag f-tr">Yok satma riski</span>',kapasite:'<span class="flag f-tr">Kapasite sınırı</span>'})[s]||'';
+function routeById(id){ return ROUTES.find(r=>r.id===id); }
+function methodSeg(){ return '<div class="seg" role="group" aria-label="Hesaplama yöntemi">'+Object.keys(METHODS).map(m=>'<button type="button" data-m="'+m+'" class="'+(S.params.method===m?'on':'')+'">'+METHODS[m].short+'</button>').join('')+'</div>'; }
+function paramCtl(){ const P=S.params; return '<div class="f"><label for="pShort">Eksik üretim (adet)</label><input id="pShort" type="number" step="100" min="0" max="12000" value="'+P.shortfall+'"></div><div class="f"><label for="pRet">İade hedefi %</label><input id="pRet" type="number" step="1" min="4" max="15" value="'+Math.round(P.returnTarget*100)+'"></div><div class="f"><label for="pCap">Araç kapasitesi (kasa · bu 5 ürün)</label><input id="pCap" type="number" step="5" min="60" max="220" value="'+P.capacity+'"></div><div class="f"><label for="pOvr">Temsilci değişikliği</label><select id="pOvr"><option value="1"'+(P.overrideAllowed?' selected':'')+'>İzinli (gerekçeli)</option><option value="0"'+(!P.overrideAllowed?' selected':'')+'>Kapalı</option></select></div>'; }
+function bindParams(){
+  document.querySelectorAll('.seg [data-m]').forEach(b=>b.onclick=()=>{ S.params.method=b.dataset.m; persist(); render(); toast('Plan yeniden hesaplandı: '+METHODS[S.params.method].short); });
+  const on=(id,fn)=>{ const el=document.getElementById(id); if(el) el.onchange=()=>{ fn(el); simCache.clear(); persist(); render(); }; };
+  on('pShort',el=>S.params.shortfall=clamp(Number(el.value)||0,0,12000));
+  on('pRet',el=>S.params.returnTarget=clamp(Number(el.value)||9,4,15)/100);
+  on('pCap',el=>S.params.capacity=clamp(Number(el.value)||165,60,220));
+  on('pOvr',el=>S.params.overrideAllowed=el.value==='1');
+}
+function stepsHtml(plan){ return '<div class="steps">'+explainPlan(plan).map(s=>'<div><b>'+s[0]+'</b>'+s[1]+'</div>').join('')+'</div>'; }
+
+/* ===================== Görünüm: Araç Yük Planı ===================== */
+function renderYuk(){
+  const plan=getPlan(); const t=plan.tot, P=plan.P;
+  const rows=plan.perRoute.slice().sort((a,b)=>({kapasite:0,iade:1,yoksat:2,hedef:3})[a.status]-({kapasite:0,iade:1,yoksat:2,hedef:3})[b.status] || b.load-a.load);
+  const shown=S.showAll?rows:rows.slice(0,10);
+  const corek=SKUS[0];
+  return `
+<div class="head"><div><h1>Araç Yük Planı · 5 Kasım</h1><p class="sub">Üretim bittiğinde plan otomatik çalışır: üretilen miktar 56 rotaya, rota içinde ${TR(TOTAL_STORES)} mağazaya dağıtılır. Mağaza stoğu bilinmediği için tahmin, teslimat − iade (gerçek satış) geçmişinden öğrenir. Yöntemi ve parametreleri değiştirince plan yeniden hesaplanır; açıklamalar hesabın kendi rakamlarıyla yazılır.</p></div>
+<div class="btns"><button class="btn" type="button" id="btnCsv">Excel’e aktar</button><button class="btn" type="button" id="btnScen">Senaryo olarak kaydet</button><button class="btn pri" type="button" id="btnApprove">Yük planını onayla</button></div></div>
+<div class="card"><h2>Günlük döngü</h2><div class="tl"><div><b>14:00</b>Dünkü satış kesiti alındı; bugünün tahmini güncellendi</div><div><b>16:00</b>Gün sonu: iade ve teslimat kayıtları kapandı</div><div><b>22:00</b>Mağaza × ürün tahmini ve üretim ihtiyacı fırına gitti</div><div class="now"><b>02:05</b>Üretim bitti · yük planı otomatik çalıştı</div><div><b>03:30</b>Yükleme bitiş · plan mobil uygulamada</div><div><b>04:00</b>Araçlar çıkar · her teslimatta yeniden dağıtım</div></div></div>
+<div class="kpis">
+<div class="card"><div class="kl">Üretim planı</div><div class="kv">${TR(t.planSum)} adet</div><div class="ks">5 ürün · tahmin + iade hedefine göre güvenlik payı</div></div>
+<div class="card"><div class="kl">Üretilen</div><div class="kv" style="color:${t.prodSum<t.planSum?'var(--warn)':'inherit'}">${TR(t.prodSum)} adet</div><div class="ks">${t.prodSum<t.planSum? TR(t.planSum-t.prodSum)+' eksik · hat 1 geç başladı':'plana uygun'}</div></div>
+<div class="card"><div class="kl">Dünkü iade</div><div class="kv">${PCT(t.yRetRate)}</div><div class="ks">hedef ${PCT(P.returnTarget)}</div></div>
+<div class="card"><div class="kl">Beklenen iade</div><div class="kv" style="color:${t.retRate>P.returnTarget?'var(--warn)':'var(--accent)'}">${PCT(t.retRate)}</div><div class="ks">${TR(Math.round(t.over))} adet · bu plana göre</div></div>
+<div class="card"><div class="kl">Beklenen yok satma</div><div class="kv">${PCT(t.shortRate)}</div><div class="ks">${TR(Math.round(t.short))} adet · tahminin payı</div></div>
+<div class="card"><div class="kl">Kapasite</div><div class="kv">${TR(t.crates)} kasa</div><div class="ks">${t.capRoutes} rota sınırda · ${plan.moves.length} kaydırma</div></div>
+</div>
+<div class="card"><h2>Hesaplama yöntemi ve parametreler</h2><div class="ctl" style="margin-top:8px">${methodSeg()}${paramCtl()}</div>${stepsHtml(plan)}</div>
+<div class="panel"><div class="tbar"><h2 style="margin:0">Rota bazında yük planı</h2><span class="muted">56 rota · satıra tıklayınca mağaza kırılımı açılır · önce riskli rotalar</span></div>
+<div class="scroll"><table><thead><tr><th>Rota</th><th class="n">Mağaza</th><th class="n">Dünkü iade</th><th class="n">Tahmin</th><th class="n">Minimum</th><th class="n">Yüklenen</th><th class="n">Kasa</th><th class="n">Doluluk</th><th class="n">Beklenen iade</th><th class="n">Yok satma</th><th>Durum</th></tr></thead><tbody>
+${shown.map(r=>`<tr class="click ${r.id===S.route?'sel':''}" data-r="${r.id}"><td>${r.name}</td><td class="n">${r.stores}</td><td class="n">${PCT(r.yRetRate)}</td><td class="n">${TR(Math.round(r.fcast))}</td><td class="n">${TR(r.minSum)}</td><td class="n hl">${TR(r.load)}</td><td class="n">${r.crates}</td><td class="n ${r.util>=0.999?'cap':''}">${PCT(r.util)}</td><td class="n ${r.retRate>P.returnTarget+0.012?'cap':''}">${PCT(r.retRate)}</td><td class="n">${TR(Math.round(r.short))}</td><td>${statusFlag(r.status)}</td></tr>`).join('')}
+${S.showAll?'':`<tr><td colspan="11"><button class="btn sm" type="button" id="btnAll">+ ${rows.length-10} rotayı göster</button></td></tr>`}
+<tr class="tot"><td>Toplam</td><td class="n">${TR(plan.perRoute.reduce((a,r)=>a+r.stores,0))}</td><td class="n">${PCT(t.yRetRate)}</td><td class="n">${TR(Math.round(t.fcast))}</td><td class="n">${TR(t.minSum)}</td><td class="n">${TR(t.load)}</td><td class="n">${TR(t.crates)}</td><td></td><td class="n">${PCT(t.retRate)}</td><td class="n">${TR(Math.round(t.short))}</td><td></td></tr>
+</tbody></table></div>
+<div class="foot">${explainPlan(plan).map(s=>s[1]).join(' ')}</div></div>
+<div class="panel"><div class="tbar"><h2 style="margin:0">Ürün bazında</h2><span class="muted">üretilen · beklenen iade · yok satma</span></div><div class="scroll"><table><thead><tr><th>Ürün</th><th class="n">Üretim planı</th><th class="n">Üretilen</th><th class="n">Tahmin</th><th class="n">Beklenen iade</th><th class="n">İade %</th><th class="n">Yok satma</th><th class="n">Kasa</th></tr></thead><tbody>
+${SKUS.map(k=>{const s=plan.perSku[k.id];return `<tr><td>${k.name}</td><td class="n">${TR(plan.planProd[k.id])}</td><td class="n hl">${TR(plan.prod[k.id])}</td><td class="n">${TR(Math.round(s.fcast))}</td><td class="n">${TR(Math.round(s.over))}</td><td class="n ${s.load&&s.over/s.load>P.returnTarget+0.012?'cap':''}">${PCT(s.load?s.over/s.load:0)}</td><td class="n">${TR(Math.round(s.short))}</td><td class="n">${k.crate} adet</td></tr>`;}).join('')}
+</tbody></table></div></div>`;
+}
+function bindYuk(){
+  bindParams();
+  document.querySelectorAll('tr[data-r]').forEach(tr=>tr.onclick=()=>{ S.route=Number(tr.dataset.r); S.store=null; persist(); location.hash='#rota'; });
+  const a=$('#btnAll'); if(a)a.onclick=()=>{S.showAll=true;render();};
+  $('#btnApprove').onclick=()=>toast('Yük planı onaylandı · 56 rota mobil uygulamaya gönderildi');
+  $('#btnScen').onclick=()=>saveScenario();
+  $('#btnCsv').onclick=()=>exportCsv();
+}
+
+/* ===================== Görünüm: Rota kırılımı ===================== */
+function renderRota(){
+  const plan=getPlan(); const r=routeById(S.route); const ri=r.id-1; const pr=plan.perRoute[ri]; const k=SKUS.find(x=>x.id===S.sku); const P=plan.P;
+  const vis=r.stores.filter(st=>st.visitedToday);
+  if(S.store==null || !r.stores[S.store] || !r.stores[S.store].visitedToday){ S.store = (vis.find(st=>st.skus[S.sku].zeroStreak>=3)||vis[0]).idx; }
+  const rows=vis.map(st=>storeRow(plan,ri,st.idx));
+  const sel=storeRow(plan,ri,S.store); const sk=sel.skus[S.sku];
+  const totQ=rows.reduce((a,x)=>a+x.skus[S.sku].q,0), totF=rows.reduce((a,x)=>a+x.skus[S.sku].f,0), totMin=rows.reduce((a,x)=>a+x.skus[S.sku].min,0), totOv=rows.reduce((a,x)=>a+x.skus[S.sku].over,0);
+  const freqL={1:'günlük',2:'gün aşırı',3:'iki günde bir'};
+  const tt=tradeTable(plan,ri,S.store,S.sku);
+  return `
+<div class="head"><div><h1>${r.name} — Mağaza Bırakma Planı</h1><p class="sub">Rotaya yüklenen miktarın mağazalara ilk dağılımı. Her mağaza için günlük tahmin, dünkü teslimat ve iade, minimum ve önerilen bırakma. Temsilci sabah mobilde bu listeyi görür; gün içinde her teslimat sonrası liste yeniden hesaplanır. Satıra tıklayınca sağda o mağazanın hesabı açılır.</p></div>
+<div class="btns"><button class="btn" type="button" id="btnBack">Tüm rotalar</button><button class="btn pri" type="button" id="btnOkRoute">Rotayı onayla</button></div></div>
+<div class="ctl"><div class="f"><label for="selR">Rota</label><select id="selR">${ROUTES.map(x=>`<option value="${x.id}" ${x.id===r.id?'selected':''}>${x.name}</option>`).join('')}</select></div><div class="f"><label for="selK">Ürün</label><select id="selK">${SKUS.map(x=>`<option value="${x.id}" ${x.id===S.sku?'selected':''}>${x.name}</option>`).join('')}</select></div><div class="f"><label>Yöntem</label>${methodSeg()}</div></div>
+<div class="kpis">
+<div class="card"><div class="kl">Yüklenen (${k.name})</div><div class="kv">${TR(totQ)} adet</div><div class="ks">${Math.ceil(totQ/k.crate)} kasa · tahmin ${TR(Math.round(totF))}</div></div>
+<div class="card"><div class="kl">Mağaza</div><div class="kv">${r.stores.length}</div><div class="ks">${vis.length} bugün ziyaret · ${r.stores.length-vis.length} bugün rotada değil</div></div>
+<div class="card"><div class="kl">Dünkü iade</div><div class="kv" style="color:${pr.yRetRate>P.returnTarget?'var(--warn)':'inherit'}">${PCT(pr.yRetRate)}</div><div class="ks">tüm ürünler</div></div>
+<div class="card"><div class="kl">Beklenen iade</div><div class="kv">${PCT(totQ?totOv/totQ:0)}</div><div class="ks">${P1(totOv)} adet · hedef ${PCT(P.returnTarget)}</div></div>
+<div class="card"><div class="kl">Araç</div><div class="kv" style="color:${pr.util>=0.999?'var(--warn)':'inherit'}">${PCT(pr.util)}</div><div class="ks">${pr.crates} / ${P.capacity} kasa karma yük</div></div>
+<div class="card"><div class="kl">Durum</div><div class="kv" style="font-size:16px;margin-top:8px">${statusFlag(pr.status)}</div></div>
+</div>
+<div class="two"><div class="panel"><div class="tbar"><h2 style="margin:0">Mağaza bazında bırakma planı · ${k.name}</h2><span class="muted">ziyaret sırasına göre</span></div>
+<div class="scroll" style="max-height:640px;overflow:auto"><table><thead><tr><th class="n">Sıra</th><th>Mağaza</th><th>Kanal</th><th>Ziyaret</th><th class="n">7 gün satış/gün</th><th class="n">Dün teslim / iade</th><th class="n">Tahmin</th><th class="n">Minimum</th><th class="n">Bırakılacak</th><th class="n">Beklenen iade</th><th>İşaret</th></tr></thead><tbody>
+${rows.map((x,i)=>{const s=x.skus[S.sku]; const yr=s.yDel?s.yRet/s.yDel:0; const fl= s.zero>=3?'<span class="flag f-ed">'+s.zero+' gündür sıfır iade</span>': yr>0.15?'<span class="flag f-dp">Dün iade yüksek</span>': x.st.freq===3?'<span class="flag f-tr">İki günde bir · 2 günlük</span>':''; return `<tr class="click ${x.st.idx===S.store?'sel':''}" data-s="${x.st.idx}"><td class="n">${i+1}</td><td>${x.st.name}</td><td><span class="b ${CHANNELS[x.st.ch].cls}">${CHANNELS[x.st.ch].label}</span></td><td class="muted">${freqL[x.st.freq]}</td><td class="n">${P1(s.sell7)}</td><td class="n">${s.yDel} / ${s.yRet}</td><td class="n">${P1(s.f)}</td><td class="n">${s.min}</td><td class="n hl">${s.q}</td><td class="n">${PCT(s.q?s.over/s.q:0)}</td><td>${fl}</td></tr>`;}).join('')}
+<tr class="tot"><td></td><td>Toplam</td><td></td><td></td><td></td><td class="n">${rows.reduce((a,x)=>a+x.skus[S.sku].yDel,0)} / ${rows.reduce((a,x)=>a+x.skus[S.sku].yRet,0)}</td><td class="n">${TR(Math.round(totF))}</td><td class="n">${totMin}</td><td class="n">${totQ}</td><td class="n">${PCT(totQ?totOv/totQ:0)}</td><td></td></tr>
+</tbody></table></div>
+<div class="foot">${(()=>{const hi=rows.filter(x=>{const s=x.skus[S.sku];return s.yDel&&s.yRet/s.yDel>0.15;}); const z=rows.filter(x=>x.skus[S.sku].zero>=3); const hiRet=hi.reduce((a,x)=>a+x.skus[S.sku].yRet,0); const allRet=rows.reduce((a,x)=>a+x.skus[S.sku].yRet,0); return 'Dünkü iadenin '+PCT(allRet?hiRet/allRet:0)+'\u2019i '+hi.length+' mağazadan geldi; '+(P.method==='min'?'bu mağazalarda bırakma tahmine çekildi. ':'bu yöntem bunu dikkate almaz. ')+z.length+' mağaza üç gündür sıfır iade bildiriyor'+(P.method==='min'?'; yok satma ihtimali tahmine eklendi.':'.')+' Minimumlar korunuyor; eksik üretimin rotaya düşen payı tahmine göre dağıtılan kısımdan kesildi.';})()}</div></div>
+<div class="card"><h2>${sel.st.name} — neden ${sk.q}?</h2>
+<div class="calc">${explainStore(plan,ri,S.store,S.sku).map(x=> x[0]==='g'?`<div class="g">${x[1]}</div>`: x[0]==='tot'?`<div class="tot">${x[1]}</div><div class="v tot">${x[2]}</div>`:`<div>${x[0]}</div><div class="v">${x[1]}</div>`).join('')}</div>
+<h2 style="margin-top:14px">İade – yok satma dengesi</h2>
+<div class="grid3"><div class="h">Bırakma</div><div class="h">Beklenen satış</div><div class="h">Beklenen iade</div><div class="h">Yok satma</div><div class="h">Net marj</div>
+${tt.map(x=>`<div class="${x.pick?'pick':''}">${x.q}</div><div class="${x.pick?'pick':''}">${P1(x.sales)}</div><div class="${x.pick?'pick':''}">${P1(x.over)}</div><div class="${x.pick?'pick':''}">${P1(x.short)}</div><div class="${x.pick?'pick':''}">${P1(x.margin)} ₼</div>`).join('')}</div>
+<p class="hint" style="margin-top:8px">Aynı hesap her mağaza × ürün için gece çalışır; yöntem değişince bu tablo ve seçili değer değişir. “Marj dengesi” yöntemi doğrudan bu tablonun en iyi satırını seçer.</p>
+<button class="btn sm" type="button" id="askSolviStore" style="margin-top:10px">Solvi’ye sor: bu mağazaya neden ${sk.q}?</button></div></div>`;
+}
+function bindRota(){
+  bindParams();
+  $('#selR').onchange=e=>{S.route=Number(e.target.value);S.store=null;persist();render();};
+  $('#selK').onchange=e=>{S.sku=e.target.value;render();};
+  document.querySelectorAll('tr[data-s]').forEach(tr=>tr.onclick=()=>{S.store=Number(tr.dataset.s);render();});
+  $('#btnBack').onclick=()=>{location.hash='#yuk';};
+  $('#btnOkRoute').onclick=()=>toast(routeById(S.route).name+' onaylandı · temsilciye gönderildi');
+  $('#askSolviStore').onclick=()=>{ const r=routeById(S.route); const st=r.stores[S.store]; const k=SKUS.find(x=>x.id===S.sku); openSolvi(); askSolvi(st.name+' mağazasına '+k.name.toLowerCase()+' için neden bu kadar bırakıyoruz, kısaca açıkla.'); };
+}
+/* ===================== Grafikler ===================== */
+function scatterSvg(sim){
+  const W=620,H=330,x0=55,x1=595,y0=30,y1=275;
+  const px=p=>x0+clamp(p,0,1)*(x1-x0); const py=d=>y1-(clamp(d,-200,200)+200)/400*(y1-y0);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="56 rotanın anlık görünümü: ilerleme ve araçtaki fazla veya eksik" style="width:100%;height:auto;display:block">`;
+  s+=`<rect x="${x0}" y="${py(40).toFixed(0)}" width="${x1-x0}" height="${(py(-40)-py(40)).toFixed(0)}" fill="var(--good-bg)"/><line x1="${x0}" y1="${py(0).toFixed(0)}" x2="${x1}" y2="${py(0).toFixed(0)}" stroke="var(--good-line)" stroke-width="2"/><line x1="${x0}" y1="${y0}" x2="${x0}" y2="${y1}" stroke="var(--line)"/><line x1="${x0}" y1="${y1}" x2="${x1}" y2="${y1}" stroke="var(--line)"/>`;
+  [0,25,50,75,100].forEach(p=>{ s+=`<text x="${px(p/100).toFixed(0)}" y="${y1+16}" font-size="10" fill="var(--ink2)" text-anchor="middle">%${p}</text>`; });
+  s+=`<text x="325" y="${y1+32}" font-size="11" font-weight="800" fill="var(--ink2)" text-anchor="middle">Rotanın ziyaret ilerlemesi</text>`;
+  [[200,'+200'],[100,'+100'],[0,'0'],[-100,'−100'],[-200,'−200']].forEach(([v,l])=>{ s+=`<text x="${x0-8}" y="${(py(v)+4).toFixed(0)}" font-size="10" fill="var(--ink2)" text-anchor="end">${l}</text>`; });
+  s+=`<text x="18" y="152" font-size="11" font-weight="800" fill="var(--ink2)" text-anchor="middle" transform="rotate(-90 18 152)">Araçta fazla / eksik (adet)</text><text x="${x1-4}" y="${py(175).toFixed(0)}" font-size="10" font-weight="800" fill="var(--warn)" text-anchor="end">fazla → iade riski</text><text x="${x1-4}" y="${py(-165).toFixed(0)}" font-size="10" font-weight="800" fill="var(--info)" text-anchor="end">eksik → yok satma riski</text>`;
+  const lab=[]; sim.routes.forEach(rs=>{ const col=rs.status==='iade'?'var(--warn)':rs.status==='yoksat'?'var(--info)':'var(--accent)'; const big=rs.status!=='hedef'||rs.id===S.route; s+=`<circle cx="${px(rs.progress).toFixed(1)}" cy="${py(rs.dev).toFixed(1)}" r="${big?7:5}" fill="${col}" fill-opacity="${big?1:0.7}" ${big?'stroke="var(--surface)" stroke-width="2"':''} data-r="${rs.id}" style="cursor:pointer"><title>${rs.name}: %${Math.round(rs.progress*100)} · ${rs.dev>=0?'+':''}${rs.dev}</title></circle>`; if(big&&lab.length<8){lab.push(rs);} });
+  lab.forEach(rs=>{ const anc=rs.progress>0.6?'end':'start'; const dx=anc==='end'?-11:11; s+=`<text x="${(px(rs.progress)+dx).toFixed(0)}" y="${(py(rs.dev)+4).toFixed(0)}" font-size="11" font-weight="800" fill="${rs.status==='iade'?'var(--warn)':rs.status==='yoksat'?'var(--info)':'var(--accent)'}" text-anchor="${anc}">Rota ${rs.id}</text>`; });
+  return s+'</svg>';
+}
+function burnSvg(simNow, simEnd, planTotal){
+  const bx0=48,bx1=350,by0=25,by1=165; const bx=m=>bx0+(m-DAY_START)/(DAY_END-DAY_START)*(bx1-bx0); const by=v=>by1-v/planTotal*(by1-by0);
+  let s=`<svg viewBox="0 0 370 205" role="img" aria-label="Filonun araçlarındaki toplam ürün gün boyunca" style="width:100%;height:auto;display:block"><line x1="${bx0}" y1="${by1}" x2="${bx1}" y2="${by1}" stroke="var(--line)"/><line x1="${bx0}" y1="${by0}" x2="${bx0}" y2="${by1}" stroke="var(--line)"/>`;
+  s+=`<text x="${bx0-6}" y="${by(planTotal)+4}" font-size="10" fill="var(--ink2)" text-anchor="end">${TR(planTotal)}</text><text x="${bx0-6}" y="${by(planTotal/2)+4}" font-size="10" fill="var(--ink2)" text-anchor="end">${TR(Math.round(planTotal/2))}</text><text x="${bx0-6}" y="${by1+4}" font-size="10" fill="var(--ink2)" text-anchor="end">0</text>`;
+  [[DAY_START,'04:00'],[S.simT,hhmm(S.simT)],[14*60,'14:00'],[DAY_END,'16:00']].forEach(([m,l])=>{ s+=`<text x="${bx(m).toFixed(0)}" y="${by1+16}" font-size="10" fill="var(--ink2)" text-anchor="middle">${l}</text>`; });
+  s+=`<line x1="${bx(DAY_START)}" y1="${by(planTotal)}" x2="${bx(DAY_END)}" y2="${by1}" stroke="var(--ink3)" stroke-width="2" stroke-dasharray="4 4"/>`;
+  s+=`<polyline points="${simNow.series.map(p=>bx(p.t).toFixed(0)+','+by(p.v).toFixed(0)).join(' ')}" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linejoin="round"/>`;
+  const proj=simEnd.series.filter(p=>p.t>=S.simT); if(proj.length) s+=`<polyline points="${proj.map(p=>bx(p.t).toFixed(0)+','+by(p.v).toFixed(0)).join(' ')}" fill="none" stroke="var(--accent)" stroke-width="3" stroke-dasharray="6 5"/>`;
+  const now=simNow.series[simNow.series.length-1]; s+=`<line x1="${bx(S.simT).toFixed(0)}" y1="${by0}" x2="${bx(S.simT).toFixed(0)}" y2="${by1}" stroke="var(--warn)" stroke-width="1.5" stroke-dasharray="3 3"/><circle cx="${bx(S.simT).toFixed(0)}" cy="${by(now.v).toFixed(0)}" r="5" fill="var(--warn)"/><text x="${(bx(S.simT)+8).toFixed(0)}" y="${(by(now.v)-6).toFixed(0)}" font-size="11" font-weight="800" fill="var(--warn)">${TR(now.v)} · şu an</text>`;
+  const endV=simEnd.series[simEnd.series.length-1].v; s+=`<circle cx="${bx(DAY_END)}" cy="${by(endV).toFixed(0)}" r="5" fill="var(--accent)"/><text x="${bx1-4}" y="${(by(endV)-10).toFixed(0)}" font-size="11" font-weight="800" fill="var(--accent)" text-anchor="end">gün sonu ${TR(endV)}</text>`;
+  s+=`<text x="56" y="192" font-size="10" fill="var(--ink2)">kesik gri: ilk plan · kesik teal: ${hhmm(S.simT)} projeksiyonu · tüm ürünler</text></svg>`;
+  return s;
+}
+
+/* ===================== Görünüm: Rota Üzerinde Yeniden Dağıtım ===================== */
+function renderGunici(){
+  const plan=getPlan(); const P=plan.P; const sim=simulate(plan,{realloc:S.realloc,until:S.simT}); const simEnd=simulate(plan,{realloc:S.realloc,until:DAY_END}); const simOff=simulate(plan,{realloc:false,until:DAY_END});
+  const t=sim.tot; const rs=sim.routes[S.route-1]; const r=ROUTES[S.route-1];
+  const evs=sim.events.slice(-14).reverse();
+  const kruv=SKUS.find(k=>k.id==='kruvasan');
+  const perSku=SKUS.map(k=>{ let vrem=0,need=0,risk=0; sim.routes.forEach(x=>{ vrem+=x.V[k.id]; let n=0; x.order.forEach(si=>{ if(x.cur[si]) n+=(x.initPlan[si]||{})[k.id]||0; }); need+=n; if(Math.abs(x.V[k.id]-n)>=Math.max(20,n*0.12)) risk++; }); return {k,vrem,need,diff:vrem-need,risk}; });
+  const remStores=rs.order.filter(si=>rs.cur[si]);
+  const endR=simEnd.tot; const endOff=simOff.tot;
+  const nxt=remStores[0]; const nxtSt=nxt!=null?r.stores[nxt]:null;
+  return `
+<div class="head"><div><h1>Rota Üzerinde Yeniden Dağıtım · 56 rota · ${hhmm(S.simT)}</h1><p class="sub">Sabit bir saat yoktur. Temsilci mobilde bir mağazanın teslimatını onayladığı anda o rotada araçta kalan miktar kalan mağazalara yeniden dağıtılır. Merkezdeki planlamacı tek rotayı değil 56 rotanın o andaki toplamını görür. Her hesapta dört koşul birlikte tutulur: gün sonunda araçta ürün kalmaz, günün iadesi hedef doğrultusunda kalır, bulunabilirlik en yüksek, yok satma en düşük. Saati ilerletince teslimat onayları akar.</p></div>
+<div class="btns"><div class="seg" role="group" aria-label="Yeniden dağıtım"><button type="button" id="reOn" class="${S.realloc?'on':''}">Yeniden dağıtım açık</button><button type="button" id="reOff" class="${!S.realloc?'on':''}">Kapalı (sabah planı)</button></div><button class="btn" type="button" id="simBack">Başa al</button><button class="btn" type="button" id="simStep">+15 dk</button><button class="btn pri" type="button" id="simPlay">${S.playing?'Durdur':'Oynat'}</button></div></div>
+<div class="kpis">
+<div class="card"><div class="kl">Ziyaret</div><div class="kv">${TR(t.visited)} / ${TR(plan.perRoute.reduce((a,x)=>a+x.stores,0))}</div><div class="ks">%${Math.round(100*t.visited/plan.perRoute.reduce((a,x)=>a+x.stores,0))} · ${56-t.done} rota yolda</div></div>
+<div class="card"><div class="kl">Yeniden dağıtım</div><div class="kv">${TR(S.realloc?t.runs:0)} çalıştırma</div><div class="ks">${S.realloc?'her teslimat onayı bir tetik':'kapalı — sabah planı uygulanıyor'}</div></div>
+<div class="card"><div class="kl">Bırakılan / plan</div><div class="kv">${TR(t.delivered)} / ${TR(t.planVisited)}</div><div class="ks">plana uyum ${PCT(t.planVisited?t.delivered/t.planVisited:0)} · ${t.closed} kapalı mağaza · ${t.override} temsilci düzeltmesi</div></div>
+<div class="card"><div class="kl">Araçlarda kalan</div><div class="kv">${TR(t.vrem)} adet</div><div class="ks">ilk plana göre ${t.vrem-t.needRem>=0?'+':''}${TR(t.vrem-t.needRem)}</div></div>
+<div class="card"><div class="kl">Kalan mağaza ihtiyacı</div><div class="kv">${TR(t.needRem)}</div><div class="ks">${TR(plan.perRoute.reduce((a,x)=>a+x.stores,0)-t.visited)} mağaza · güncellendi</div></div>
+<div class="card"><div class="kl">Gün sonu beklentisi</div><div class="kv" style="color:${endR.vrem===0?'var(--accent)':'var(--warn)'}">${56-sim.routes.filter(x=>x.status!=='hedef').length} / 56 rota</div><div class="ks">araçta ${TR(endR.vrem)} · iade ${PCT(dayRet(endR))}${S.realloc?' · kapalı olsa '+PCT(dayRet(endOff)):''}</div></div>
+</div>
+<div class="card"><h2>Her yeniden dağıtımda tutulan koşullar</h2><div class="steps">
+<div class="${endR.vrem===0?'ok':'warn'}"><b>Araçta stok kalmaz</b>Her rotada araçta kalan, kalan mağazalara tam dağıtılır. ${S.realloc?'Projeksiyon: 56 rota gün sonunda araçta '+TR(endR.vrem)+' adetle kapanıyor.':'Sabah planıyla gün sonunda araçlarda '+TR(endOff.vrem)+' adet kalıyor.'}</div>
+<div class="${(dayRet(endR))<=P.returnTarget+0.01?'ok':'warn'}"><b>İade hedef doğrultusunda</b>Filo gün sonu iade projeksiyonu ${PCT(dayRet(endR))} (hedef ${PCT(P.returnTarget)}); her ek adet, bırakılacağı mağazanın beklenen iadesiyle tartılır.</div>
+<div class="ok"><b>Bulunabilirlik maksimum</b>Hiçbir mağaza minimumun altına inmez; üç gündür sıfır iade bildiren ${TR(ROUTES.reduce((a,x)=>a+x.stores.filter(s=>s.visitedToday&&s.skus.corek.zeroStreak>=3).length,0))} mağaza önceliklendirildi.</div>
+<div class="${t.riskYok?'warn':'ok'}"><b>Yok satma minimum</b>${t.riskYok?t.riskYok+' rotada araçtaki miktar kalan ihtiyacın altında: zincir ve HoReCa korunur, bakkallarda kısılır. Yarın tahmine sinyal.':'Şu an kalan ihtiyacın altında rota yok.'}</div></div></div>
+<div class="two"><div class="panel"><div class="tbar"><h2 style="margin:0">56 rotanın ${hhmm(S.simT)} anlık görünümü</h2><span class="muted">her nokta bir rota · noktaya tıklayınca kırılımı açılır</span></div><div class="chartbox" id="scatter">${scatterSvg(sim)}</div>
+<div class="foot">Yeşil bant: araçtaki miktar kalan ihtiyaçla örtüşüyor, rota araçta sıfırla kapanacak (${sim.routes.filter(x=>x.status==='hedef').length} rota). Üst bölge: araçta fazla, gün sonu iade hedefin üstüne çıkar (${sim.routes.filter(x=>x.status==='iade').map(x=>'Rota '+x.id).slice(0,4).join(', ')||'—'}). Alt bölge: araçtaki miktar kalan ihtiyacın altında, yok satma riski (${sim.routes.filter(x=>x.status==='yoksat').map(x=>'Rota '+x.id).slice(0,4).join(', ')||'—'}). Noktalar her teslimat onayında yer değiştirir.</div></div>
+<div class="panel"><div class="tbar"><h2 style="margin:0">Filonun araçlarındaki toplam</h2><span class="muted">56 rota · tüm ürünler</span></div><div class="chartbox">${burnSvg(sim,simEnd,t.planTotal)}</div>
+<div class="foot">04:00’te yüklenen ${TR(t.planTotal)} adedin ${TR(t.delivered)}’ı bırakıldı; araçlarda ${TR(t.vrem)} var, kalan mağaza ihtiyacı ${TR(t.needRem)}. Projeksiyon 16:00’da ${TR(endR.vrem)}.</div></div></div>
+<div class="two eq"><div class="panel"><div class="tbar"><h2 style="margin:0">Son tetikler · tüm rotalar</h2><span class="muted">planlamacıya işaretlenenler</span></div>
+<div class="ev"><div class="h">Saat</div><div class="h">Tetik</div><div class="h r">Rotada araçta kalan</div>
+${evs.map((e,i)=>`<div class="${i===0?'now':''}">${hhmm(e.t)}</div><div class="${i===0?'now':''}"><span class="flag f-${e.flag}">${e.route.split(' · ')[0]}</span> ${e.txt}</div><div class="r ${i===0?'now':''}">${e.vrem}</div>`).join('')}
+<div class="muted">04:00</div><div class="muted">56 araç çıktı · ilk plan ${TR(t.planTotal)} adet</div><div class="r muted">${TR(t.planTotal)}</div></div></div>
+<div class="panel"><div class="tbar"><h2 style="margin:0">Araçlarda kalan vs kalan ihtiyaç · 56 rota toplamı</h2><span class="muted">${hhmm(S.simT)}</span></div><div class="scroll"><table><thead><tr><th>Ürün</th><th class="n">Araçlarda kalan</th><th class="n">Kalan ihtiyaç</th><th class="n">Fark</th><th class="n">Riskli rota</th><th>Karar</th></tr></thead><tbody>
+${perSku.map(x=>`<tr><td>${x.k.name}</td><td class="n">${TR(x.vrem)}</td><td class="n">${TR(x.need)}</td><td class="n ${x.diff>0?'up':x.diff<0?'dn':''}">${x.diff>0?'+':''}${TR(x.diff)}</td><td class="n ${x.risk>5?'cap':''}">${x.risk}</td><td>${x.diff>0?'<span class="flag f-ed">Sıfır iadeli mağazalara öne alındı</span>':x.diff<0?'<span class="flag f-dp">Bakkallarda kısıldı · zincir ve HoReCa korundu</span>':'<span class="flag f-lb">Plan</span>'}</td></tr>`).join('')}
+</tbody></table></div><div class="foot">${S.realloc?'Fazla olan ürünler kalan mağazalar içinde beklenen iadesi en düşük olanlara öne alınır; eksik olanlarda zincir ve HoReCa minimumu korunur, bakkal ve XSM kısılır. Yarının üretim önerisine sinyal gider.':'Yeniden dağıtım kapalıyken fazla ve eksik rota üzerinde düzeltilmez; sabah planı aynen uygulanır.'}</div></div></div>
+<div class="two"><div class="panel"><div class="tbar"><h2 style="margin:0">${r.name} kırılımı · kalan ${remStores.length} mağaza (Çörek 500 g)</h2><span class="muted">noktaya tıklandığında açılır · temsilcinin mobilde gördüğü sıra</span></div>
+<div class="scroll" style="max-height:420px;overflow:auto"><table><thead><tr><th class="n">Sıra</th><th>Mağaza</th><th>Kanal</th><th class="n">İlk plan</th><th class="n">${hhmm(S.simT)} öneri</th><th class="n">Fark</th><th>Neden</th></tr></thead><tbody>
+${remStores.slice(0,12).map((si,i)=>{const st=r.stores[si]; const a=(rs.initPlan[si]||{}).corek||0; const b=(rs.cur[si]||{}).corek||0; const d=b-a; const yr=st.skus.corek.yDel?st.skus.corek.yRet/st.skus.corek.yDel:0; const why= d>0?(st.skus.corek.zeroStreak>=3?st.skus.corek.zeroStreak+' gündür sıfır iade · fazla bu mağazaya':'beklenen iade düşük'): d<0?(st.ch==='bakkal'||st.ch==='xsm'?'araçta eksik · bakkal kısıldı':'iade yüksek, artırılmadı'):(yr>0.15?'minimum + iade yüksek, artırılmadı':'—'); return `<tr><td class="n">${rs.visited+i+1}</td><td>${st.name}</td><td><span class="b ${CHANNELS[st.ch].cls}">${CHANNELS[st.ch].label}</span></td><td class="n">${a}</td><td class="n hl">${b}</td><td class="n ${d>0?'up':d<0?'dn':''}">${d>0?'+':''}${d}</td><td class="muted">${why}</td></tr>`;}).join('')}
+${remStores.length>12?`<tr><td></td><td class="muted">+ ${remStores.length-12} mağaza</td><td colspan="5"></td></tr>`:''}
+<tr class="tot"><td></td><td>Toplam</td><td></td><td class="n">${remStores.reduce((a,si)=>a+((rs.initPlan[si]||{}).corek||0),0)}</td><td class="n">${rs.V.corek}</td><td class="n">${(()=>{const d=rs.V.corek-remStores.reduce((a,si)=>a+((rs.initPlan[si]||{}).corek||0),0);return (d>0?'+':'')+d;})()}</td><td></td></tr>
+</tbody></table></div><div class="foot">${rs.visited} mağaza ziyaret edildi, ${rs.delivered} / ${rs.planVisited} bırakıldı${rs.closed?', '+rs.closed+' mağaza kapalıydı':''}${rs.override?', '+rs.override+' temsilci düzeltmesi':''}. Araçta ${rs.vrem} adet, kalan ihtiyaç ${rs.needRem}; ${rs.status==='hedef'?'rota araçta sıfırla kapanacak.':rs.status==='iade'?'fazla kalan mağazalara eritiliyor, iade uyarısı.':'eksik: zincir ve HoReCa korunuyor.'}</div></div>
+<div class="card"><h2>Temsilcinin mobilde gördüğü</h2>
+${nxtSt?`<div class="mob"><div class="kl">${r.name.split(' · ')[0]} · sonraki mağaza</div><div class="st">${rs.visited+1} · ${nxtSt.name}</div>${SKUS.map(k=>{const a=(rs.initPlan[nxt]||{})[k.id]||0; const b=(rs.cur[nxt]||{})[k.id]||0; const d=b-a; return `<div class="ln"><span>${k.name}</span><b>${b} ${d?'<span class="'+(d>0?'up':'dn')+'">('+(d>0?'+':'')+d+')</span>':''}</b></div>`;}).join('')}<div class="ln" style="border:0"><span class="muted">Raf sayımı · dünden kalan</span><b>0</b></div><div class="btns" style="margin-top:10px"><button class="btn pri" type="button" id="mobOk" style="flex:1">Teslimatı onayla</button><button class="btn" type="button" id="mobEdit">Değiştir</button></div></div>`:`<div class="mob"><div class="st">${r.name.split(' · ')[0]} tamamlandı</div><div class="ks">araçta ${rs.vrem} adet · fırına dönüş</div></div>`}
+<p class="hint" style="margin-top:10px">Onay anında araçta kalan ve kalan ihtiyaç yeniden hesaplanır; bir sonraki mağazanın listesi saniyeler içinde güncellenir. Raf sayımı girilirse ertesi günün tahminine de girer. “Teslimatı onayla” saati bu rotanın bir sonraki teslimatına ilerletir.</p></div></div>`;
+}
+function bindGunici(){
+  $('#reOn').onclick=()=>{S.realloc=true;render();}; $('#reOff').onclick=()=>{S.realloc=false;render();};
+  $('#simBack').onclick=()=>{S.simT=DAY_START;stopPlay();render();};
+  $('#simStep').onclick=()=>{S.simT=Math.min(DAY_END,S.simT+15);render();};
+  $('#simPlay').onclick=()=>{ if(S.playing)stopPlay(); else { S.playing=true; S._timer=setInterval(()=>{ S.simT=Math.min(DAY_END,S.simT+15); if(S.simT>=DAY_END)stopPlay(); render(); },700); } render(); };
+  document.querySelectorAll('#scatter circle[data-r]').forEach(c=>c.onclick=()=>{S.route=Number(c.dataset.r);persist();render();});
+  const ok=$('#mobOk'); if(ok) ok.onclick=()=>{ const plan=getPlan(); const simE=simulate(plan,{realloc:S.realloc,until:DAY_END}); const rs=simE.routes[S.route-1]; // bu rotanın bir sonraki olayı
+    const r=ROUTES[S.route-1]; const simNow=simulate(plan,{realloc:S.realloc,until:S.simT}); const done=simNow.routes[S.route-1].visited; const step=r.dayLen/rs.n; const nextT=Math.round(DAY_START+step*(done+0.6)); S.simT=Math.min(DAY_END,Math.max(S.simT+1,nextT)); render(); toast(r.name.split(' · ')[0]+' · teslimat onaylandı, kalan mağazalar yeniden hesaplandı'); };
+  const ed=$('#mobEdit'); if(ed) ed.onclick=()=>toast('Temsilci değişikliği gerekçe listesinden seçilir; sapma Öneri Kabulü ekranında ölçülür');
+}
+function stopPlay(){ S.playing=false; clearInterval(S._timer); }
+
+/* ===================== Görünüm: Gün Görünümü ===================== */
+function renderGun(){
+  const plan=getPlan(); const P=plan.P; const cutMin={'10:00':600,'12:00':720,'14:00':840,'Canlı':S.simT}[S.cut]; const sim=simulate(plan,{realloc:S.realloc,until:cutMin}); const simEnd=simulate(plan,{realloc:S.realloc,until:DAY_END}); const simOff=simulate(plan,{realloc:false,until:DAY_END});
+  const t=sim.tot, e=simEnd.tot, o=simOff.tot; const nStores=plan.perRoute.reduce((a,x)=>a+x.stores,0);
+  const rows=sim.routes.slice().sort((a,b)=>({iade:0,yoksat:1,hedef:2})[a.status]-({iade:0,yoksat:1,hedef:2})[b.status]||Math.abs(b.dev)-Math.abs(a.dev));
+  const skuBars=SKUS.map(k=>{ let del=0,load=0; sim.routes.forEach(rs=>{ load+=rs.V0[k.id]; del+=rs.V0[k.id]-rs.V[k.id]; }); let endRet=0,endDel=0; simEnd.routes.forEach(rs=>{ Object.keys(rs.deliv).forEach(si=>{ const d=rs.deliv[si][k.id]||0; endDel+=d; endRet+=Math.max(0,d-(rs.demand[si][k.id]||0)); }); }); return {k,del,load,endRet:endDel?endRet/endDel:0}; });
+  const yRet=plan.tot.yRetRate;
+  return `
+<div class="head"><div><h1>Gün Görünümü · 5 Kasım, ${S.cut==='Canlı'?hhmm(S.simT):S.cut}</h1><p class="sub">Yönetim için gün içi kesit: ilk plana uyum, şu ana kadar bırakılan, araçlarda kalan ve günün nasıl kapanacağı. Rakamlar her teslimat onayıyla canlı güncellenir; 14:00 kesiti ayrıca yarının tahminine ve 22:00 üretim ihtiyacına girer.</p></div>
+<div class="btns"><div class="seg" role="group" aria-label="Kesit">${['10:00','12:00','14:00','Canlı'].map(c=>`<button type="button" data-cut="${c}" class="${S.cut===c?'on':''}">${c}</button>`).join('')}</div><button class="btn" type="button" id="btnCsv2">Excel’e aktar</button></div></div>
+<div class="kpis">
+<div class="card"><div class="kl">Ziyaret</div><div class="kv">${TR(t.visited)} / ${TR(nStores)}</div><div class="ks">%${Math.round(100*t.visited/nStores)} · ${56-t.done} rota yolda</div></div>
+<div class="card"><div class="kl">Bırakılan / plan</div><div class="kv">${TR(t.delivered)} / ${TR(t.planVisited)}</div><div class="ks">plana uyum ${PCT(t.planVisited?t.delivered/t.planVisited:0)} · tüm ürünler</div></div>
+<div class="card"><div class="kl">Temsilci değişikliği</div><div class="kv">${PCT(t.visited?t.override/t.visited:0)}</div><div class="ks">${t.override} mağaza · gerekçe listeden</div></div>
+<div class="card"><div class="kl">Araçlarda kalan</div><div class="kv">${TR(t.vrem)}</div><div class="ks">kalan ihtiyaç ${TR(t.needRem)} · gün sonu ${TR(e.vrem)}</div></div>
+<div class="card"><div class="kl">Beklenen gün sonu iade</div><div class="kv" style="color:${(dayRet(e))<=P.returnTarget+0.01?'var(--accent)':'var(--warn)'}">${PCT(dayRet(e))}</div><div class="ks">hedef ${PCT(P.returnTarget)} · dün ${PCT(yRet)}</div></div>
+<div class="card"><div class="kl">Yok satma sinyali</div><div class="kv" style="color:${t.riskYok?'var(--warn)':'inherit'}">${t.riskYok} rota</div><div class="ks">${TR(e.lost)} adet kayıp satış projeksiyonu</div></div>
+</div>
+<div class="two"><div class="panel"><div class="tbar"><h2 style="margin:0">Rota bazında durum</h2><span class="muted">56 rota · önce riskli</span></div>
+<div class="scroll" style="max-height:520px;overflow:auto"><table><thead><tr><th>Rota</th><th class="n">Ziyaret</th><th class="n">Bırakılan / plan</th><th class="n">Sapma</th><th class="n">Araçta kalan</th><th class="n">Kalan ihtiyaç</th><th class="n">Beklenen iade</th><th>Durum</th></tr></thead><tbody>
+${rows.map(rs=>{const dev=rs.planVisited?(rs.delivered-rs.planVisited)/rs.planVisited:0; return `<tr class="click" data-r="${rs.id}"><td>${rs.name}</td><td class="n">${rs.visited} / ${rs.n}</td><td class="n">${rs.delivered} / ${rs.planVisited}</td><td class="n ${dev<-0.05?'dn':dev>0.03?'up':''}">${dev>=0?'+':''}${Math.round(dev*100)}%</td><td class="n">${rs.vrem}</td><td class="n">${rs.needRem}</td><td class="n ${rs.expRetRate>P.returnTarget+0.012?'cap':''}">${PCT(rs.expRetRate)}</td><td>${statusFlag(rs.status)}</td></tr>`;}).join('')}
+<tr class="tot"><td>Toplam</td><td class="n">${TR(t.visited)} / ${TR(nStores)}</td><td class="n">${TR(t.delivered)} / ${TR(t.planVisited)}</td><td class="n">${t.planVisited?Math.round(100*(t.delivered-t.planVisited)/t.planVisited):0}%</td><td class="n">${TR(t.vrem)}</td><td class="n">${TR(t.needRem)}</td><td class="n">${PCT(t.expRetRate)}</td><td></td></tr>
+</tbody></table></div><div class="foot">${(()=>{const ia=rows.filter(x=>x.status==='iade'), yk=rows.filter(x=>x.status==='yoksat'); return (ia.length?ia.slice(0,2).map(x=>x.name.split(' · ')[0]).join(' ve ')+' plana göre geride; fazla, rotanın kalan mağazalarına eritilemiyor, gün sonu iade hedefin üstünde bekleniyor ve yarınki tahmine sinyal gitti. ':'Plana göre geride kalan rota yok. ')+(yk.length?yk.slice(0,2).map(x=>x.name.split(' · ')[0]).join(' ve ')+'\u2019de araçtaki miktar kalan ihtiyacın altında; zincir ve HoReCa korundu, bakkallarda kısıldı.':'');})()}</div></div>
+<div class="card"><h2>Ürün bazında ${S.cut==='Canlı'?hhmm(S.simT):S.cut} kesiti</h2><div class="bars" style="margin-top:8px">${skuBars.map(x=>`<div>${x.k.name}</div><div class="bar"><span class="${x.endRet>P.returnTarget+0.03?'w':''}" style="width:${Math.round(100*x.del/Math.max(1,x.load))}%"></span></div><div class="n">%${Math.round(100*x.del/Math.max(1,x.load))}</div>`).join('')}</div><p class="ks" style="margin-top:4px">Bırakılan / yüklenen. ${(()=>{const w=skuBars.filter(x=>x.endRet>P.returnTarget+0.03); return w.length? w.map(x=>x.k.name).join(', ')+' geride: gün sonu iade '+w.map(x=>PCT(x.endRet)).join(', ')+' bekleniyor.':'Tüm ürünler hedef bandında.';})()}</p>
+<h2 style="margin-top:16px">Günü kapatma projeksiyonu · 16:00</h2>
+<div class="calc"><div class="g">Kalem</div><div>Yüklenen</div><div class="v">${TR(e.planTotal)}</div><div>Bırakılan</div><div class="v">${TR(e.delivered)}</div><div>Araçta kalan</div><div class="v hl">${TR(e.vrem)}</div><div>İade (yarın toplanır)</div><div class="v">${TR(e.ret)} · ${PCT(dayRet(e))}</div><div>Dün iade</div><div class="v">${PCT(yRet)}</div><div>Kayıp satış (yok satma)</div><div class="v">${TR(e.lost)} adet</div><div class="g">Yeniden dağıtım olmasaydı</div><div>Araçta kalan</div><div class="v">${TR(o.vrem)}</div><div>İade</div><div class="v">${PCT(dayRet(o))}</div><div>Kayıp satış</div><div class="v">${TR(o.lost)} adet</div><div class="tot">Yarın için sinyal</div><div class="v tot">${(()=>{const ia=rows.find(x=>x.status==='iade'); const w=skuBars.filter(x=>x.endRet>P.returnTarget+0.03)[0]; return (ia?ia.name.split(' · ')[0]+' −%10':'')+(w?' · '+w.k.name+' −'+TR(Math.round(plan.prod[w.k.id]*0.08)):'')||'—';})()}</div></div>
+<p class="hint" style="margin-top:8px">Kesit ile 16:00 arası, aynı planla simülasyonun devamıdır. Yarının tahmini ve 22:00’daki üretim ihtiyacı 14:00 kesitine göre güncellenir.</p></div></div>`;
+}
+function bindGun(){ document.querySelectorAll('[data-cut]').forEach(b=>b.onclick=()=>{S.cut=b.dataset.cut;render();}); document.querySelectorAll('tr[data-r]').forEach(tr=>tr.onclick=()=>{S.route=Number(tr.dataset.r);persist();location.hash='#gunici';}); $('#btnCsv2').onclick=()=>exportCsv(); }
+
+/* ===================== Talep Tahmini · mağaza × ürün, demand sensing ===================== */
+const TODAY=new Date(2026,10,5); // 5 Kasım 2026, Perşembe
+const DOWF=[0.93,0.97,1.00,1.02,1.06,1.12,0.90]; // Pazar..Cumartesi (Date.getDay)
+const DOWN=['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'];
+function dayAt(off){ const d=new Date(TODAY); d.setDate(d.getDate()+off); return d; }
+function calFactor(d,k){ const dom=d.getDate(); let f=1, why=[]; if(dom===15||dom===16){f*=1.08;why.push('maaş günü');} if(d.getMonth()===2&&dom>=18&&dom<=24){f*=k.id==='corek'?1.15:1.35;why.push('Novruz');} if(d.getMonth()===10&&dom===8){f*=1.05;why.push('Zəfər Günü (9 Kasım) öncesi');} if(d.getMonth()===10&&dom===9){f*=0.85;why.push('Zəfər Günü · tatil');} return {f,why}; }
+const WEATHER7=[{t:19,r:0},{t:17,r:0},{t:14,r:1},{t:13,r:1},{t:16,r:0},{t:18,r:0},{t:15,r:0}];
+function weatherFactor(off,k){ const w=WEATHER7[clamp(off,0,6)]; let f=1; if(w.r){ f*=k.id==='corek'?1.03:0.95; } if(w.t<=14){ f*=k.id==='kete'||k.id==='corek'?1.03:1.0; } return {f,w}; }
+const histCache=new Map();
+function history(ri,si,kid){ const key=ri+'|'+si+'|'+kid; if(histCache.has(key))return histCache.get(key); const st=ROUTES[ri].stores[si]; const k=SKUS.find(x=>x.id===kid); const d=st.skus[kid]; const rnd=mulberry(5000+ri*997+si*31+SKUS.indexOf(k)); const out=[]; let level=d.mu*(0.92+rnd()*0.06); for(let i=90;i>=1;i--){ const dt=dayAt(-i); const cal=calFactor(dt,k).f; const dow=DOWF[dt.getDay()]; level+= (d.mu-level)*0.03 + gauss(rnd)*d.mu*0.01; const season=1+0.04*Math.sin((90-i)/90*Math.PI*2); const dem=Math.max(0,level*dow*cal*season*(1+gauss(rnd)*CHANNELS[st.ch].cv)); const del=Math.max(1,Math.round(level*dow*cal*(0.9+rnd()*0.35))); const sold=Math.min(del,Math.round(dem)); const ret=del-sold; const stockout=ret===0&&dem>del; out.push({dt,del,ret,sold,dem:Math.round(dem),stockout,corrected: stockout?Math.round(dem):sold}); }
+  // son 7 günü mağaza verisiyle hizala
+  const h7=d.hist; for(let i=0;i<7;i++){ const o=out[out.length-7+i]; o.del=h7[i].del; o.ret=h7[i].ret; o.sold=o.del-o.ret; o.stockout=o.ret===0&&o.dem>o.del; o.corrected=o.stockout?Math.max(o.sold,Math.round(o.dem)):o.sold; }
+  histCache.set(key,out); return out; }
+function sensing(ri,si,kid){ // kısa dönem sinyaller
+  const st=ROUTES[ri].stores[si]; const k=SKUS.find(x=>x.id===kid); const d=st.skus[kid]; const h=history(ri,si,kid); const sig=[];
+  const last7=h.slice(-7).reduce((a,o)=>a+o.corrected,0)/7, last28=h.slice(-28).reduce((a,o)=>a+o.corrected,0)/28; const trend=clamp(last7/Math.max(0.1,last28),0.85,1.15); sig.push({name:'Kısa dönem trend',src:'Son 7 gün / son 28 gün satış',f:trend,horizon:'7 gün',note:P1(last7)+' / '+P1(last28)});
+  const yr=d.yDel?d.yRet/d.yDel:0; if(yr>0.15) sig.push({name:'Dünkü iade yüksek',src:'Dün '+d.yDel+' teslim, '+d.yRet+' iade',f:0.92,horizon:'1–2 gün',note:PCT(yr)});
+  if(d.zeroStreak>=3) sig.push({name:'Sıfır iade serisi · yok satma',src:d.zeroStreak+' gündür iade yok',f:1.06,horizon:'3 gün',note:'talep teslimatın üstünde'});
+  const plan=getPlan(); const sim=simulate(plan,{realloc:true,until:S.simT}); const rs=sim.routes[ri]; if(Math.abs(rs.factor-1)>=0.03) sig.push({name:'Zincir gün içi satış (POS)',src:rs.name.split(' · ')[0]+' · '+hhmm(S.simT)+' kesiti',f:rs.factor,horizon:'bugün + yarın',note:(rs.factor>1?'+':'')+Math.round((rs.factor-1)*100)+'% plana göre'});
+  const w=weatherFactor(0,k); if(w.f!==1) sig.push({name:'Hava',src:w.w.t+' °C, '+(w.w.r?'yağışlı':'yağış yok'),f:w.f,horizon:'bugün',note:''});
+  const c=calFactor(TODAY,k); if(c.why.length) sig.push({name:'Takvim',src:c.why.join(', '),f:c.f,horizon:'bugün',note:''});
+  return sig; }
+function forecast7(ri,si,kid){ const st=ROUTES[ri].stores[si]; const k=SKUS.find(x=>x.id===kid); const d=st.skus[kid]; const h=history(ri,si,kid); const base=h.slice(-28).reduce((a,o)=>a+o.corrected/DOWF[o.dt.getDay()],0)/28; // mevsimden arındırılmış seviye
+  const sig=sensing(ri,si,kid); const trend=(sig.find(x=>x.name==='Kısa dönem trend')||{f:1}).f; const pos=(sig.find(x=>x.name.startsWith('Zincir'))||{f:1}).f; const zero=(sig.find(x=>x.name.startsWith('Sıfır'))||{f:1}).f; const yr=(sig.find(x=>x.name.startsWith('Dünkü'))||{f:1}).f;
+  const days=[]; for(let off=0;off<7;off++){ const dt=dayAt(off); const dow=DOWF[dt.getDay()]; const cal=calFactor(dt,k); const w=weatherFactor(off,k); const decay=Math.pow(0.6,off); const sense=1+((pos-1)*(off<=1?1:0)+(zero-1)*decay+(yr-1)*decay); const f=base*dow*cal.f*w.f*trend*sense; const sg=f*CHANNELS[st.ch].cv*(1+0.05*off); days.push({off,dt,base,dow,cal,w,trend,sense,f,lo:Math.max(0,f-1.28*sg),hi:f+1.28*sg,sg}); }
+  // doğruluk: son 30 gün basit geri test
+  let ae=0,act=0,bias=0; h.slice(-30).forEach(o=>{ const fc=base*DOWF[o.dt.getDay()]*calFactor(o.dt,k).f; ae+=Math.abs(fc-o.corrected); act+=o.corrected; bias+=fc-o.corrected; }); return {days,base,sig,wmape:act?ae/act:0,bias:act?bias/act:0,h}; }
+function fcChart(F){ const W=760,H=250,x0=44,x1=740,y0=18,y1=210; const h=F.h.slice(-60); const pts=h.map(o=>o.corrected).concat(F.days.map(d=>d.hi)); const ymax=Math.max(1,Math.ceil(Math.max(...pts)*1.1)); const n=h.length+7; const X=i=>x0+i/(n-1)*(x1-x0); const Y=v=>y1-v/ymax*(y1-y0);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Son 60 gün satış ve 7 günlük tahmin" style="width:100%;height:auto;display:block">`;
+  s+=`<line x1="${x0}" y1="${y1}" x2="${x1}" y2="${y1}" stroke="var(--line)"/><line x1="${x0}" y1="${y0}" x2="${x0}" y2="${y1}" stroke="var(--line)"/>`;
+  [0,0.5,1].forEach(q=>{ s+=`<text x="${x0-6}" y="${Y(ymax*q)+4}" font-size="10" fill="var(--ink2)" text-anchor="end">${Math.round(ymax*q)}</text><line x1="${x0}" y1="${Y(ymax*q)}" x2="${x1}" y2="${Y(ymax*q)}" stroke="var(--line2)"/>`; });
+  const xs=X(h.length-1); s+=`<rect x="${xs}" y="${y0}" width="${x1-xs}" height="${y1-y0}" fill="var(--accent-soft2)"/><text x="${xs+6}" y="${y0+12}" font-size="10" font-weight="700" fill="var(--accent)">7 günlük tahmin</text>`;
+  // band
+  const band=F.days.map((d,i)=>`${X(h.length-1+i+1).toFixed(0)},${Y(d.hi).toFixed(0)}`).concat(F.days.slice().reverse().map((d,i)=>`${X(h.length-1+7-i).toFixed(0)},${Y(d.lo).toFixed(0)}`)); s+=`<polygon points="${band.join(' ')}" fill="var(--accent)" fill-opacity="0.15"/>`;
+  // delivered bars (light) and corrected demand line
+  h.forEach((o,i)=>{ s+=`<rect x="${(X(i)-2).toFixed(0)}" y="${Y(o.del).toFixed(0)}" width="4" height="${(y1-Y(o.del)).toFixed(0)}" fill="var(--chip)"/>`; if(o.stockout) s+=`<circle cx="${X(i).toFixed(0)}" cy="${(Y(o.corrected)-6).toFixed(0)}" r="2.5" fill="var(--info)"/>`; });
+  s+=`<polyline points="${h.map((o,i)=>X(i).toFixed(0)+','+Y(o.sold).toFixed(0)).join(' ')}" fill="none" stroke="var(--ink3)" stroke-width="1.5"/>`;
+  s+=`<polyline points="${h.map((o,i)=>X(i).toFixed(0)+','+Y(o.corrected).toFixed(0)).join(' ')}" fill="none" stroke="var(--ink)" stroke-width="2"/>`;
+  const fl=[`${X(h.length-1).toFixed(0)},${Y(h[h.length-1].corrected).toFixed(0)}`].concat(F.days.map((d,i)=>`${X(h.length+i).toFixed(0)},${Y(d.f).toFixed(0)}`)); s+=`<polyline points="${fl.join(' ')}" fill="none" stroke="var(--accent)" stroke-width="2.5"/>`;
+  F.days.forEach((d,i)=>{ s+=`<circle cx="${X(h.length+i).toFixed(0)}" cy="${Y(d.f).toFixed(0)}" r="3" fill="var(--accent)"/><text x="${X(h.length+i).toFixed(0)}" y="${y1+14}" font-size="10" fill="var(--ink2)" text-anchor="middle">${DOWN[d.dt.getDay()]}</text>`; });
+  [0,15,30,45].forEach(i=>{ const o=h[i]; if(o) s+=`<text x="${X(i).toFixed(0)}" y="${y1+14}" font-size="10" fill="var(--ink2)" text-anchor="middle">${o.dt.getDate()}.${o.dt.getMonth()+1}</text>`; });
+  s+=`<text x="${x0}" y="${H-4}" font-size="10" fill="var(--ink2)">gri sütun: teslimat · ince gri: satış (teslim − iade) · siyah: stoksuzluk düzeltmeli talep · mavi nokta: sıfır iade günü · teal: tahmin ve %80 bandı</text></svg>`; return s; }
+function renderTahmin(){
+  const r=routeById(S.route); const ri=r.id-1; const k=SKUS.find(x=>x.id===S.sku); const vis=r.stores.filter(st=>st.visitedToday||true);
+  if(S.store==null||!r.stores[S.store]) S.store=(vis.find(st=>st.skus[S.sku].zeroStreak>=3)||vis[0]).idx;
+  const st=r.stores[S.store]; const F=forecast7(ri,S.store,S.sku); const t0=F.days[0];
+  const sense=F.sig.filter(x=>x.name!=='Kısa dönem trend'||Math.abs(x.f-1)>=0.02);
+  // rota grid: mağaza × 7 gün
+  const grid=vis.slice(0,14).map(x=>({st:x,F:forecast7(ri,x.idx,S.sku)}));
+  const tot7=F.days.reduce((a,d)=>a+d.f,0);
+  const senseTotal=t0.sense*t0.trend;
+  return `
+<div class="head"><div><h1>Taze Talep · mağaza × ürün tahmini</h1><p class="sub">Uzun tarihçeden öğrenen baz tahmin (seviye, haftanın günü, takvim, hava) ile kısa dönem sinyallerin (son 7 gün trendi, dünkü iade, sıfır iade serisi, zincirlerin gün içi satışı) birleşimi. Mağaza stoğu olmadan satış = teslimat − iade; sıfır iadeli günler yok satma sinyali olarak düzeltilir. Tahmin 7 gün ileriye, %80 bandıyla; bugünün tahmini araç yük planına, 14:00 kesiti yarının tahminine girer.</p></div>
+<div class="btns"><button class="btn" type="button" id="btnFcCsv">Excel’e aktar</button><button class="btn pri" type="button" id="btnFcOk">Tahmini onayla</button></div></div>
+<div class="ctl"><div class="f"><label for="selR">Rota</label><select id="selR">${ROUTES.map(x=>`<option value="${x.id}" ${x.id===r.id?'selected':''}>${x.name}</option>`).join('')}</select></div><div class="f"><label for="selS">Mağaza</label><select id="selS">${vis.map(x=>`<option value="${x.idx}" ${x.idx===S.store?'selected':''}>${x.name}</option>`).join('')}</select></div><div class="f"><label for="selK">Ürün</label><select id="selK">${SKUS.map(x=>`<option value="${x.id}" ${x.id===S.sku?'selected':''}>${x.name}</option>`).join('')}</select></div><div class="f"><label>Kesit</label><div class="seg"><button type="button" class="on">${hhmm(S.simT)}</button></div></div></div>
+<div class="kpis">
+<div class="card"><div class="kl">Bugün tahmin</div><div class="kv">${P1(t0.f)}</div><div class="ks">${P1(t0.lo)} – ${P1(t0.hi)} · %80 bandı</div></div>
+<div class="card"><div class="kl">7 gün toplam</div><div class="kv">${TR(Math.round(tot7))}</div><div class="ks">dün satış ${st.skus[S.sku].yDel-st.skus[S.sku].yRet} · teslim ${st.skus[S.sku].yDel}</div></div>
+<div class="card"><div class="kl">Sinyal düzeltmesi</div><div class="kv" style="color:${senseTotal>1.02?'var(--info)':senseTotal<0.98?'var(--warn)':'inherit'}">${senseTotal>=1?'+':''}${Math.round((senseTotal-1)*100)}%</div><div class="ks">${sense.length} aktif sinyal · bugün</div></div>
+<div class="card"><div class="kl">Tahmin doğruluğu</div><div class="kv">${PCT(1-F.wmape)}</div><div class="ks">son 30 gün · WMAPE ${PCT(F.wmape)}</div></div>
+<div class="card"><div class="kl">Sapma (bias)</div><div class="kv">${F.bias>=0?'+':''}${PCT(F.bias)}</div><div class="ks">${F.bias>0.03?'tahmin yüksek kalıyor':F.bias<-0.03?'tahmin düşük kalıyor':'dengede'}</div></div>
+<div class="card"><div class="kl">Sıfır iade serisi</div><div class="kv">${st.skus[S.sku].zeroStreak} gün</div><div class="ks">${st.skus[S.sku].zeroStreak>=3?'yok satma düzeltmesi açık':'düzeltme yok'}</div></div>
+</div>
+<div class="two" style="grid-template-columns:minmax(0,1.7fr) minmax(0,1fr)">
+<div class="panel"><div class="tbar"><h2 style="margin:0">${st.name} · ${k.name}</h2><span class="muted">son 60 gün + 7 gün tahmin</span></div><div class="chartbox">${fcChart(F)}</div></div>
+<div class="panel"><div class="tbar"><h2 style="margin:0">Kısa dönem sinyaller</h2><span class="muted">demand sensing</span></div><div class="scroll"><table><thead><tr><th>Sinyal</th><th>Kaynak</th><th class="n">Etki</th><th>Ufuk</th></tr></thead><tbody>
+${sense.map(x=>`<tr><td><b>${x.name}</b></td><td class="muted">${x.src}${x.note?' · '+x.note:''}</td><td class="n ${x.f>1?'up':x.f<1?'dn':''}">${x.f>=1?'+':''}${Math.round((x.f-1)*100)}%</td><td class="muted">${x.horizon}</td></tr>`).join('')}
+${sense.length?'':'<tr><td colspan="4" class="muted">Bugün aktif kısa dönem sinyal yok; tahmin baz modelden geliyor.</td></tr>'}
+</tbody></table></div><div class="foot">Sinyaller baz tahmine çarpan olarak girer ve ufku boyunca söner: zincir POS bugün ve yarını, iade ve sıfır iade serisi 2–3 günü etkiler. Haftalık model uzun tarihçeden öğrenir; sinyaller günlük düzeltmedir.</div></div></div>
+<div class="two eq">
+<div class="panel"><div class="tbar"><h2 style="margin:0">Önümüzdeki 7 gün</h2><span class="muted">${st.name} · ${k.name}</span></div><div class="scroll"><table><thead><tr><th>Gün</th><th class="n">Baz</th><th class="n">Haftanın günü</th><th>Takvim</th><th>Hava</th><th class="n">Trend</th><th class="n">Sinyal</th><th class="n">Tahmin</th><th class="n">%80 bandı</th></tr></thead><tbody>
+${F.days.map(d=>`<tr class="${d.off===0?'sel':''}"><td>${d.off===0?'Bugün':d.off===1?'Yarın':DOWN[d.dt.getDay()]} ${d.dt.getDate()}.${d.dt.getMonth()+1}</td><td class="n">${P1(d.base)}</td><td class="n">×${d.dow.toFixed(2)}</td><td class="muted">${d.cal.why.length?d.cal.why.join(', ')+' ×'+d.cal.f.toFixed(2):'—'}</td><td class="muted">${d.w.w.t} °C${d.w.w.r?' · yağış':''}${d.w.f!==1?' ×'+d.w.f.toFixed(2):''}</td><td class="n">×${d.trend.toFixed(2)}</td><td class="n ${d.sense>1.005?'up':d.sense<0.995?'dn':''}">×${d.sense.toFixed(2)}</td><td class="n hl">${P1(d.f)}</td><td class="n muted">${P1(d.lo)} – ${P1(d.hi)}</td></tr>`).join('')}
+<tr class="tot"><td>7 gün</td><td></td><td></td><td></td><td></td><td></td><td></td><td class="n">${TR(Math.round(tot7))}</td><td></td></tr>
+</tbody></table></div><div class="foot">Baz = son 28 günün haftanın gününden arındırılmış seviyesi. Bugünün tahmini gece yük planına girdi; 14:00 kesitindeki zincir POS sinyali yarının tahminini ve 22:00 üretim ihtiyacını günceller.</div></div>
+<div class="panel"><div class="tbar"><h2 style="margin:0">${r.name} · mağaza × gün tahmini (${k.name})</h2><span class="muted">ilk 14 mağaza · tıklayınca mağaza seçilir</span></div><div class="scroll" style="max-height:420px;overflow:auto"><table><thead><tr><th>Mağaza</th><th>Kanal</th>${F.days.map(d=>`<th class="n">${d.off===0?'Bugün':DOWN[d.dt.getDay()]}</th>`).join('')}<th class="n">Sinyal</th></tr></thead><tbody>
+${grid.map(g=>`<tr class="click ${g.st.idx===S.store?'sel':''}" data-s="${g.st.idx}"><td>${g.st.name}</td><td><span class="b ${CHANNELS[g.st.ch].cls}">${CHANNELS[g.st.ch].label}</span></td>${g.F.days.map(d=>`<td class="n ${d.off===0?'hl':''}">${P1(d.f)}</td>`).join('')}<td class="n ${g.F.days[0].sense*g.F.days[0].trend>1.02?'up':g.F.days[0].sense*g.F.days[0].trend<0.98?'dn':''}">${Math.round((g.F.days[0].sense*g.F.days[0].trend-1)*100)>=0?'+':''}${Math.round((g.F.days[0].sense*g.F.days[0].trend-1)*100)}%</td></tr>`).join('')}
+<tr class="muted"><td>+ ${vis.length-grid.length} mağaza</td><td colspan="9"></td></tr>
+</tbody></table></div><div class="foot">Aynı tablo 56 rota × 2.530 mağaza × 5 ürün için her gece ve her 14:00 kesitinde çalışır; bugün sütunu araç yük planının girdisidir.</div></div></div>`;
+}
+function bindTahmin(){ $('#selR').onchange=e=>{S.route=Number(e.target.value);S.store=null;persist();render();}; $('#selS').onchange=e=>{S.store=Number(e.target.value);render();}; $('#selK').onchange=e=>{S.sku=e.target.value;render();}; document.querySelectorAll('tr[data-s]').forEach(tr=>tr.onclick=()=>{S.store=Number(tr.dataset.s);render();}); $('#btnFcOk').onclick=()=>toast('Tahmin onaylandı · yük planına ve 22:00 üretim ihtiyacına gönderildi'); $('#btnFcCsv').onclick=()=>exportCsv(); }
+
+/* ===================== Senaryolar ===================== */
+function summarize(params){ const plan=getPlan(params); const e=simulate(plan,{realloc:true,until:DAY_END}); const o=simulate(plan,{realloc:false,until:DAY_END}); const t=plan.tot; return {prodSum:t.prodSum,load:t.load,retRate:t.retRate,shortRate:t.shortRate,short:t.short,margin:t.margin,capRoutes:t.capRoutes,belowMin:t.belowMin,moves:plan.moves.length,dayRet:dayRet(e),dayLost:e.lost,dayVrem:e.vrem,dayRetOff:dayRet(o),dayLostOff:o.lost,dayVremOff:o.vrem}; }
+function saveScenario(){ const def='Senaryo '+String.fromCharCode(65+S.scenarios.length%26); const name=window.prompt('Senaryo adı',def+' · '+METHODS[S.params.method].short); if(!name)return; S.scenarios.push({name,params:Object.assign({},S.params)}); persist(); toast('Kaydedildi: '+name); if(S.view==='senaryo')render(); }
+function renderSenaryo(){
+  const cur={name:'Şu anki plan',params:Object.assign({},S.params)}; const all=[cur].concat(S.scenarios); const sums=all.map(s=>summarize(s.params));
+  const cols=[['Yöntem',s=>METHODS[s.params.method].short],['Eksik üretim',s=>TR(s.params.shortfall)+' adet'],['İade hedefi',s=>PCT(s.params.returnTarget)],['Kapasite',s=>s.params.capacity+' kasa'],['Temsilci değişikliği',s=>s.params.overrideAllowed?'izinli':'kapalı']];
+  const metrics=[['Yüklenen',(m)=>TR(m.load)+' adet'],['Beklenen iade (plan)',(m)=>PCT(m.retRate)],['Beklenen yok satma',(m)=>PCT(m.shortRate)+' · '+TR(Math.round(m.short))+' adet'],['Beklenen net marj',(m)=>money(m.margin)],['Kapasite sınırındaki rota',(m)=>m.capRoutes+' · '+m.moves+' kaydırma'],['Minimum altı mağaza × ürün',(m)=>TR(m.belowMin)],['Gün sonu iade (yeniden dağıtım açık)',(m)=>PCT(m.dayRet)],['Gün sonu iade (kapalı)',(m)=>PCT(m.dayRetOff)],['Kayıp satış açık / kapalı',(m)=>TR(m.dayLost)+' / '+TR(m.dayLostOff)+' adet'],['Araçta kalan açık / kapalı',(m)=>TR(m.dayVrem)+' / '+TR(m.dayVremOff)]];
+  const best=(i)=>{ const vals=sums.map(m=>[m.retRate,m.shortRate,-m.margin][i]); const mn=Math.min(...vals); return vals.map(v=>v===mn); };
+  return `
+<div class="head"><div><h1>Senaryolar</h1><p class="sub">Yük planı ekranında “Senaryo olarak kaydet” ile saklanan planlar yan yana. Üst satırlar parametreler, alt satırlar aynı günün sonuçları: plan beklentisi ve gün içi simülasyonun (yeniden dağıtım açık / kapalı) kapanışı. “Bugünkü uygulama” satırı, temsilcilerin dünkü teslimat oranıyla dağıttığı bugünkü düzenin karşılığıdır.</p></div>
+<div class="btns"><button class="btn" type="button" id="scenBase">Bugünkü uygulamayı ekle</button><button class="btn" type="button" id="scenAdd">Şu anki planı kaydet</button>${S.scenarios.length?'<button class="btn" type="button" id="scenClear">Hepsini sil</button>':''}</div></div>
+<div class="panel"><div class="tbar"><h2 style="margin:0">Karşılaştırma</h2><span class="muted">${all.length} senaryo</span></div><div class="scroll"><table><thead><tr><th></th>${all.map((s,i)=>`<th>${s.name}${i?` <button class="btn sm" type="button" data-load="${i-1}">Yükle</button> <button class="btn sm" type="button" data-del="${i-1}">Sil</button>`:''}</th>`).join('')}</tr></thead><tbody>
+${cols.map(c=>`<tr><td class="muted">${c[0]}</td>${all.map(s=>`<td>${c[1](s)}</td>`).join('')}</tr>`).join('')}
+<tr class="tot"><td>Sonuçlar</td>${all.map(()=>'<td></td>').join('')}</tr>
+${metrics.map((m,mi)=>`<tr><td class="muted">${m[0]}</td>${sums.map((x,i)=>`<td class="${(mi===1&&best(0)[i])||(mi===2&&best(1)[i])||(mi===3&&best(2)[i])?'hl':''}">${m[1](x)}</td>`).join('')}</tr>`).join('')}
+</tbody></table></div><div class="foot">Koyu teal: o satırda en iyi değer. Plan beklentisi normal dağılım varsayımıyla; gün sonu rakamları aynı gün için sentetik gerçekleşen talebin simülasyonu. Bu demo Solvoyo motorunun sadeleştirilmiş karşılığıdır; gerçek projede tahmin ve dağıtım motoru ATS verisiyle eğitilir.</div></div>`;
+}
+function bindSenaryo(){
+  $('#scenAdd').onclick=()=>saveScenario();
+  $('#scenBase').onclick=()=>{ S.scenarios.push({name:'Bugünkü uygulama',params:Object.assign({},S.params,{method:'bugun'})}); persist(); render(); };
+  const c=$('#scenClear'); if(c)c.onclick=()=>{ if(confirm('Tüm senaryolar silinsin mi?')){S.scenarios=[];persist();render();} };
+  document.querySelectorAll('[data-load]').forEach(b=>b.onclick=()=>{ S.params=Object.assign({},S.scenarios[Number(b.dataset.load)].params); persist(); location.hash='#yuk'; toast('Senaryo yüklendi'); });
+  document.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ S.scenarios.splice(Number(b.dataset.del),1); persist(); render(); });
+}
+
+/* ===================== Dışa aktarma ===================== */
+async function exportCsv(){
+  const dl=window.claude? await claude.use('downloads').catch(()=>null) : null; const plan=getPlan();
+  let rows, name;
+  if(S.view==='tahmin'){ const r=routeById(S.route); const F0=forecast7(r.id-1,r.stores[0].idx,S.sku); rows=[['Rota','Mağaza','Kanal'].concat(F0.days.map(d=>d.dt.getDate()+'.'+(d.dt.getMonth()+1)))]; r.stores.forEach(st=>{ const F=forecast7(r.id-1,st.idx,S.sku); rows.push([r.name,st.name,CHANNELS[st.ch].label].concat(F.days.map(d=>P1(d.f)))); }); name='ats-rota-'+r.id+'-7-gun-tahmin-'+S.sku+'.csv'; }
+  else if(S.view==='rota'){ const r=routeById(S.route); rows=[['Rota','Mağaza','Kanal'].concat(SKUS.map(k=>k.name))]; r.stores.filter(s=>s.visitedToday).forEach(st=>{ const x=storeRow(plan,r.id-1,st.idx); rows.push([r.name,st.name,CHANNELS[st.ch].label].concat(SKUS.map(k=>x.skus[k.id].q))); }); name='ats-rota-'+r.id+'-bırakma-planı.csv'; }
+  else { rows=[['Rota','Mağaza','Tahmin','Minimum','Yüklenen','Kasa','Doluluk','Beklenen iade','Durum']]; plan.perRoute.forEach(r=>rows.push([r.name,r.stores,Math.round(r.fcast),r.minSum,r.load,r.crates,Math.round(r.util*100)+'%',(r.retRate*100).toFixed(1)+'%',r.status])); name='ats-arac-yuk-plani.csv'; }
+  const csv='\uFEFF'+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\n');
+  if(!dl){ const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}); const u=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=u; a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),2000); toast('CSV indirildi'); return; }
+  try{ await dl.save({filename:name,data:csv}); toast('CSV kaydedildi'); }catch(e){ if(e&&e.code!=='declined') toast('İndirme yapılamadı'); }
+}
+
+/* ===================== Solvi ===================== */
+const SOLVI={open:false,turns:[],busy:false,sampleFn:undefined,ctl:null};
+function openSolvi(){ SOLVI.open=true; $('#solvi').classList.add('open'); if(!SOLVI.turns.length) solviGreet(); renderQs(); setTimeout(()=>$('#solviIn').focus(),250); }
+function closeSolvi(){ SOLVI.open=false; $('#solvi').classList.remove('open'); }
+function addMsg(role,text,think){ const d=document.createElement('div'); d.className='msg '+role+(think?' think':''); d.textContent=text; $('#solviLog').appendChild(d); $('#solviLog').scrollTop=1e9; return d; }
+function solviGreet(){ addMsg('a','Merhaba, ben Solvi. Bu ekrandaki planı okuyabiliyorum: rota ve mağaza kararlarının nedenini, senaryo farklarını sorabilir ya da “iade hedefini %7 yap” gibi bir what-if isteyebilirsin.'); }
+function renderQs(){ const qs={tahmin:['Bugünkü tahmin neden bu?','Hangi sinyaller aktif?','Yarın için ne değişiyor?','Tahmin doğruluğu nasıl?'],yuk:['Rota 12’ye neden bu kadar yükledik?','Eksik üretim nereden kesildi?','İade hedefini %7 yapsak ne olur?','Bugünkü uygulamaya göre fark ne?'],rota:['Seçili mağazaya neden bu kadar?','Bu rotada iade neden yüksek?','Minimumlar nasıl belirleniyor?'],gunici:['Şu an riskli rotalar hangileri?','Yeniden dağıtım kapalı olsa iade ne olurdu?','Araçta fazla olan ürün ne oluyor?'],gun:['Günü nasıl kapatıyoruz?','Yarın için hangi sinyaller gitti?'],senaryo:['Hangi senaryo daha iyi, neden?','Marj dengesi yöntemi ne yapıyor?']}[S.view]||[]; $('#solviQs').innerHTML=qs.map(q=>`<button type="button">${q}</button>`).join(''); document.querySelectorAll('#solviQs button').forEach(b=>b.onclick=()=>askSolvi(b.textContent)); }
+function contextText(){
+  const plan=getPlan(); const t=plan.tot; const P=plan.P;
+  let c=`EKRAN: ${({yuk:'Araç Yük Planı',rota:'Rota · Mağaza Bırakma Planı',gunici:'Rota Üzerinde Yeniden Dağıtım',gun:'Gün Görünümü',senaryo:'Senaryolar'})[S.view]}\n`;
+  c+=`PLAN PARAMETRELERİ: yöntem=${METHODS[P.method].label}; iade hedefi=${PCT(P.returnTarget)}; araç kapasitesi=${P.capacity} kasa; eksik üretim=${P.shortfall} adet; temsilci değişikliği=${P.overrideAllowed?'izinli':'kapalı'}\n`;
+  c+=`PLAN ÖZETİ: üretim planı ${t.planSum}, üretilen ${t.prodSum}, yüklenen ${t.load}, kasa ${t.crates}, kapasite sınırında ${t.capRoutes} rota, ${plan.moves.length} kaydırma; dünkü iade ${PCT(t.yRetRate)}; beklenen iade ${PCT(t.retRate)}; beklenen yok satma ${PCT(t.shortRate)} (${Math.round(t.short)} adet); beklenen net marj ${Math.round(t.margin)} ₼; minimum toplamı ${t.minSum}.\n`;
+  c+='YÖNTEM ADIMLARI: '+explainPlan(plan).map(s=>s[0]+': '+s[1]).join(' | ')+'\n';
+  c+='ÜRÜNLER: '+SKUS.map(k=>`${k.name} üretilen ${plan.prod[k.id]} (plan ${plan.planProd[k.id]}), kasa ${k.crate} adet, fiyat ${k.price} ₼, maliyet ${k.cost} ₼, raf ömrü ${k.shelf} saat, beklenen iade ${PCT(plan.perSku[k.id].load?plan.perSku[k.id].over/plan.perSku[k.id].load:0)}`).join('; ')+'\n';
+  const risky=plan.perRoute.filter(r=>r.status!=='hedef').slice(0,8); c+='RİSKLİ ROTALAR: '+(risky.map(r=>`${r.name} [${r.status}] yüklenen ${r.load}, kasa ${r.crates}/${P.capacity}, beklenen iade ${PCT(r.retRate)}, dünkü iade ${PCT(r.yRetRate)}`).join('; ')||'yok')+'\n';
+  const r=plan.perRoute[S.route-1]; c+=`SEÇİLİ ROTA: ${r.name}: ${r.stores} mağaza, tahmin ${Math.round(r.fcast)}, minimum ${r.minSum}, yüklenen ${r.load}, kasa ${r.crates}, doluluk ${PCT(r.util)}, beklenen iade ${PCT(r.retRate)}, dünkü iade ${PCT(r.yRetRate)}, yok satma ${Math.round(r.short)}, durum ${r.status}\n`;
+  if(S.view==='tahmin'&&S.store!=null){ const k=SKUS.find(x=>x.id===S.sku); const st=ROUTES[S.route-1].stores[S.store]; const F=forecast7(S.route-1,S.store,S.sku); c+=`TAHMİN (${st.name}, ${k.name}): baz ${P1(F.base)}; 7 gün: `+F.days.map(d=>`${d.off===0?'bugün':DOWN[d.dt.getDay()]} ${P1(d.f)} (${P1(d.lo)}–${P1(d.hi)})`).join(', ')+`; doğruluk son 30 gün ${PCT(1-F.wmape)}, bias ${PCT(F.bias)}; sinyaller: `+(F.sig.map(x=>`${x.name} ${x.f>=1?'+':''}${Math.round((x.f-1)*100)}% (${x.src})`).join('; ')||'yok')+'\n'; }
+  if(S.view==='rota'&&S.store!=null){ const k=SKUS.find(x=>x.id===S.sku); c+=`SEÇİLİ MAĞAZA (${k.name}): `+explainStore(plan,S.route-1,S.store,S.sku).map(x=>x[0]==='g'?'['+x[1]+']':x[0]==='tot'?x[1]+'='+x[2]:x[0]+'='+x[1]).join('; ')+'; iade–yok satma tablosu: '+tradeTable(plan,S.route-1,S.store,S.sku).map(x=>`${x.q} adet → satış ${P1(x.sales)}, iade ${P1(x.over)}, yok satma ${P1(x.short)}, marj ${P1(x.margin)} ₼${x.pick?' (seçilen)':''}`).join(' | ')+'\n'; }
+  if(S.view==='gunici'||S.view==='gun'){ const sim=simulate(plan,{realloc:S.realloc,until:S.view==='gun'?({'10:00':600,'12:00':720,'14:00':840,'Canlı':S.simT}[S.cut]):S.simT}); const e=simulate(plan,{realloc:S.realloc,until:DAY_END}).tot; const o=simulate(plan,{realloc:false,until:DAY_END}).tot; const ts=sim.tot; c+=`GÜN İÇİ (${hhmm(sim.until)}, yeniden dağıtım ${S.realloc?'açık':'kapalı'}): ziyaret ${ts.visited}, bırakılan ${ts.delivered}/${ts.planVisited}, araçlarda ${ts.vrem}, kalan ihtiyaç ${ts.needRem}, kapalı mağaza ${ts.closed}, temsilci düzeltmesi ${ts.override}, iade riski ${ts.riskIade} rota, yok satma riski ${ts.riskYok} rota. GÜN SONU PROJEKSİYONU: araçta ${e.vrem}, iade ${PCT(dayRet(e))}, kayıp satış ${e.lost}; yeniden dağıtım kapalı olsa araçta ${o.vrem}, iade ${PCT(dayRet(o))}, kayıp satış ${o.lost}. Riskli rotalar: `+sim.routes.filter(x=>x.status!=='hedef').slice(0,6).map(x=>`${x.name} [${x.status}] araçta ${x.vrem} kalan ihtiyaç ${x.needRem}`).join('; ')+'\n'; }
+  if(S.scenarios.length){ c+='SENARYOLAR: '+S.scenarios.map(s=>{const m=summarize(s.params); return `${s.name}: ${METHODS[s.params.method].short}, iade hedefi ${PCT(s.params.returnTarget)}, eksik ${s.params.shortfall} → beklenen iade ${PCT(m.retRate)}, yok satma ${PCT(m.shortRate)}, marj ${Math.round(m.margin)} ₼, gün sonu iade açık/kapalı ${PCT(m.dayRet)}/${PCT(m.dayRetOff)}`;}).join(' | ')+'\n'; }
+  return c;
+}
+const RULES=`Sen Solvi’sin: Solvoyo’nun ATS Food için hazırladığı sıcak satış dağıtım planlama demosunun asistanısın. Türkçe, kısa ve somut cevap ver (en fazla 5–6 cümle ya da kısa maddeler), rakamları aşağıdaki plan verisinden al, uydurma. Bu bir demo simülasyonudur: Solvoyo’nun gerçek motoru değil, yaklaşımın sadeleştirilmiş karşılığı; sorulursa bunu söyle. Dört koşulu hatırla: gün sonunda araçta ürün kalmaz, iade hedef doğrultusunda, bulunabilirlik maksimum, yok satma minimum. Gerekirse araçları kullan: bir rota ya da mağaza ayrıntısı için get_route / get_store; "ne olur" sorularında run_whatif (apply=true dersen ekrana uygulanır; kullanıcı açıkça "uygula/yap/değiştir" demediyse apply=false). Teknik terim yerine planlamacı dili kullan.`;
+function solviTools(){ return [
+  {name:'get_route',description:'Bir rotanın plan özetini döner: mağaza sayısı, tahmin, minimum, yüklenen, kasa, doluluk, beklenen iade, dünkü iade, durum ve en dikkat çeken 5 mağaza. Rota numarası 1–56.',inputSchema:{type:'object',properties:{route_id:{type:'number'}},required:['route_id']},execute:(inp)=>{ const id=clamp(Number(inp.route_id)||S.route,1,56); const plan=getPlan(); const r=plan.perRoute[id-1]; const R=ROUTES[id-1]; const rows=R.stores.filter(s=>s.visitedToday).map(st=>storeRow(plan,id-1,st.idx)); const top=rows.slice().sort((a,b)=>b.over-a.over).slice(0,5).map(x=>`${x.st.name} (${CHANNELS[x.st.ch].label}): yük ${x.load}, beklenen iade ${P1(x.over)}, dün iade ${SKUS.reduce((a,k)=>a+x.skus[k.id].yRet,0)}`); return {rota:r.name,magaza:r.stores,tahmin:Math.round(r.fcast),minimum:r.minSum,yuklenen:r.load,kasa:r.crates,doluluk:PCT(r.util),beklenen_iade:PCT(r.retRate),dunku_iade:PCT(r.yRetRate),yok_satma:Math.round(r.short),durum:r.status,dikkat:top}; }},
+  {name:'get_store',description:'Seçili rotada (veya verilen rotada) adı verilen mağazanın ürün bazında kararını ve hesabını döner (tahmin, minimum, bırakılacak, beklenen iade, dünkü teslim/iade, sıfır iade serisi).',inputSchema:{type:'object',properties:{route_id:{type:'number'},store_name:{type:'string'}},required:['store_name']},execute:(inp)=>{ const id=clamp(Number(inp.route_id)||S.route,1,56); const R=ROUTES[id-1]; const q=String(inp.store_name||'').toLowerCase(); const st=R.stores.find(s=>s.visitedToday&&s.name.toLowerCase().includes(q))||R.stores.find(s=>s.name.toLowerCase().includes(q)); if(!st) throw new Error('Mağaza bulunamadı: '+inp.store_name); const x=storeRow(getPlan(),id-1,st.idx); const out={rota:R.name,magaza:st.name,kanal:CHANNELS[st.ch].label,ziyaret:({1:'günlük',2:'gün aşırı',3:'iki günde bir'})[st.freq],urunler:{}}; SKUS.forEach(k=>{const s=x.skus[k.id]; out.urunler[k.name]={tahmin:P1(s.f),minimum:s.min,birakilacak:s.q,beklenen_iade:P1(s.over),beklenen_yok_satma:P1(s.short),dun_teslim:s.yDel,dun_iade:s.yRet,sifir_iade_serisi:s.zero,son7gun_satis:P1(s.sell7)};}); return out; }},
+  {name:'run_whatif',description:'Parametreleri değiştirip planı yeniden hesaplar ve özetini döner (yüklenen, beklenen iade, yok satma, marj, kapasite, gün sonu iade açık/kapalı). method: min|bugun|marj|adil; return_target_pct: 4–15; shortfall: 0–12000; capacity: 60–220 (bu 5 ürüne ayrılan kasa). apply=true ise ekrana uygulanır.',inputSchema:{type:'object',properties:{method:{type:'string'},return_target_pct:{type:'number'},shortfall:{type:'number'},capacity:{type:'number'},apply:{type:'boolean'}}},execute:(inp)=>{ const p=Object.assign({},S.params); if(inp.method&&METHODS[inp.method])p.method=String(inp.method); if(inp.return_target_pct!=null)p.returnTarget=clamp(Number(inp.return_target_pct),4,15)/100; if(inp.shortfall!=null)p.shortfall=clamp(Number(inp.shortfall),0,12000); if(inp.capacity!=null)p.capacity=clamp(Number(inp.capacity),60,220); const m=summarize(p); const base=summarize(S.params); if(inp.apply){ S.params=p; persist(); render(); } return {uygulandi:!!inp.apply,parametreler:{yontem:METHODS[p.method].short,iade_hedefi:PCT(p.returnTarget),eksik_uretim:p.shortfall,kapasite:p.capacity},sonuc:{yuklenen:m.load,beklenen_iade:PCT(m.retRate),beklenen_yok_satma:PCT(m.shortRate),yok_satma_adet:Math.round(m.short),marj:Math.round(m.margin)+' ₼',kapasite_rota:m.capRoutes,min_alti:m.belowMin,gun_sonu_iade_acik:PCT(m.dayRet),gun_sonu_iade_kapali:PCT(m.dayRetOff),kayip_satis:m.dayLost},mevcut_plan:{beklenen_iade:PCT(base.retRate),beklenen_yok_satma:PCT(base.shortRate),marj:Math.round(base.margin)+' ₼'}}; }},
+  {name:'compare_scenarios',description:'Kayıtlı senaryoları ve şu anki planı yan yana döner.',execute:()=>{ const all=[{name:'Şu anki plan',params:S.params}].concat(S.scenarios); return all.map(s=>{const m=summarize(s.params); return {ad:s.name,yontem:METHODS[s.params.method].short,iade_hedefi:PCT(s.params.returnTarget),eksik:s.params.shortfall,beklenen_iade:PCT(m.retRate),yok_satma:PCT(m.shortRate),marj:Math.round(m.margin)+' ₼',gun_sonu_iade_acik:PCT(m.dayRet),gun_sonu_iade_kapali:PCT(m.dayRetOff),kayip_satis:m.dayLost};}); }}
+]; }
+function localAnswer(q){ // Solvi erişilemezse sayfanın kendi hesabından cevap
+  const plan=getPlan(); const t=plan.tot; const P=plan.P; const ql=q.toLowerCase(); const m=ql.match(/rota\s*(\d+)/); const r=plan.perRoute[(m?clamp(Number(m[1]),1,56):S.route)-1];
+  if(ql.includes('%') && (ql.includes('hedef')||ql.includes('iade'))){ const pm=ql.match(/%\s*(\d+)|(\d+)\s*%/); const v=pm?Number(pm[1]||pm[2]):7; const s=summarize(Object.assign({},S.params,{returnTarget:v/100})); return `İade hedefi ${PCT(v/100)} olunca: beklenen iade ${PCT(s.retRate)} (şimdi ${PCT(t.retRate)}), beklenen yok satma ${PCT(s.shortRate)} (şimdi ${PCT(t.shortRate)}), net marj ${money(s.margin)} (şimdi ${money(t.margin)}). Güvenlik payı küçüldüğü için iade düşer, yok satma artar; gün sonu simülasyonunda iade ${PCT(s.dayRet)}.`; }
+  if(ql.includes('bugünkü')||ql.includes('bugunku')){ const s=summarize(Object.assign({},S.params,{method:'bugun'})); return `Bugünkü uygulama (dünkü teslimat oranıyla dağıtım): beklenen iade ${PCT(s.retRate)}, yok satma ${PCT(s.shortRate)}, marj ${money(s.margin)}. Şu anki plan: iade ${PCT(t.retRate)}, yok satma ${PCT(t.shortRate)}, marj ${money(t.margin)}. Fark, dünkü iadeyi ve sıfır iade serilerini dikkate almaktan geliyor.`; }
+  if(ql.includes('eksik')){ return explainPlan(plan)[3][1]+' Kesinti minimumlara dokunmadan, tahmine göre dağıtılan kısımdan yapıldı.'; }
+  if(ql.includes('risk')){ const sim=simulate(plan,{realloc:S.realloc,until:S.simT}); const ia=sim.routes.filter(x=>x.status==='iade'), yk=sim.routes.filter(x=>x.status==='yoksat'); return `${hhmm(S.simT)} itibarıyla iade riski: ${ia.map(x=>x.name.split(' · ')[0]+' (+'+x.dev+')').join(', ')||'yok'}. Yok satma riski: ${yk.map(x=>x.name.split(' · ')[0]+' ('+x.dev+')').join(', ')||'yok'}. Fazla olan rotalarda kalan mağazalardan beklenen iadesi düşük olanlara öne alınıyor; eksik olanlarda zincir ve HoReCa korunuyor.`; }
+  if(ql.includes('kapalı')||ql.includes('kapali')){ const e=simulate(plan,{realloc:true,until:DAY_END}).tot, o=simulate(plan,{realloc:false,until:DAY_END}).tot; return `Yeniden dağıtım açıkken gün sonu iade ${PCT(dayRet(e))}, araçta ${e.vrem} adet, kayıp satış ${e.lost}. Kapalıyken (sabah planı aynen) iade ${PCT(dayRet(o))}, araçta ${o.vrem}, kayıp satış ${o.lost}.`; }
+  if(ql.includes('senaryo')){ if(!S.scenarios.length) return 'Henüz kayıtlı senaryo yok; yük planı ekranında “Senaryo olarak kaydet” ile ekleyebilirsin.'; const all=[{name:'Şu anki plan',params:S.params}].concat(S.scenarios).map(s=>({s,m:summarize(s.params)})); const best=all.slice().sort((a,b)=>b.m.margin-a.m.margin)[0]; return all.map(x=>`${x.s.name}: iade ${PCT(x.m.retRate)}, yok satma ${PCT(x.m.shortRate)}, marj ${money(x.m.margin)}`).join('. ')+`. Marj açısından en iyi: ${best.s.name}.`; }
+  if(ql.includes('mağaza')||ql.includes('magaza')||ql.includes('neden')&&S.view==='rota'){ if(S.store!=null){ const k=SKUS.find(x=>x.id===S.sku); const rows=explainStore(plan,S.route-1,S.store,S.sku); const st=ROUTES[S.route-1].stores[S.store]; return `${st.name} için ${k.name}: `+rows.filter(x=>x[0]!=='g').map(x=>x[0]==='tot'?x[1]+' '+x[2]:x[0]+' '+x[1]).join('; ')+'.'; } }
+  return `${r.name}: ${r.stores} mağaza, tahmin ${TR(Math.round(r.fcast))}, minimum ${TR(r.minSum)}, yüklenen ${TR(r.load)} adet (${r.crates} kasa, doluluk ${PCT(r.util)}). Beklenen iade ${PCT(r.retRate)} (dün ${PCT(r.yRetRate)}), yok satma ${Math.round(r.short)} adet, durum: ${({hedef:'hedefte',iade:'iade riski',yoksat:'yok satma riski',kapasite:'kapasite sınırında'})[r.status]}. Önce minimumlar, kalan tahmine ve dünkü iadeye göre dağıtıldı.`;
+}
+async function askSolvi(q){
+  if(!q||SOLVI.busy)return; const inp=$('#solviIn'); inp.value='';
+  addMsg('u',q); const think=addMsg('a','Düşünüyor…',true); SOLVI.busy=true; $('#solviSend').disabled=true; $('#solviStop').hidden=false;
+  let fn=SOLVI.sampleFn;
+  if(fn===undefined){ $('#solviSt').textContent='Bağlanıyor…'; try{ fn=window.claude? await claude.use('sample') : null; }catch(e){ fn=null; }
+    if(!fn && window.SOLVI_ENDPOINT){ // sunucu tarafı vekil: {messages:[...]} → {text}
+      fn=async (msgs,opts)=>{ const r=await fetch(window.SOLVI_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:msgs}),signal:opts&&opts.signal}); if(!r.ok) throw {code:'upstream_error',message:'HTTP '+r.status}; const j=await r.json(); if(opts&&opts.onText&&j.text) opts.onText({text:j.text,delta:j.text}); return {text:j.text||'',truncated:false,modelTierApplied:'default'}; };
+      fn.proxy=true; }
+    SOLVI.sampleFn=fn; $('#solviSt').textContent=fn?'Planlama asistanı':'Çevrimdışı — sayfanın hesabından cevaplıyor'; }
+  const finish=()=>{ SOLVI.busy=false; $('#solviSend').disabled=false; $('#solviStop').hidden=true; $('#solviLog').scrollTop=1e9; };
+  if(!fn){ think.classList.remove('think'); think.textContent=localAnswer(q); finish(); return; }
+  SOLVI.turns.push({role:'user',content:q});
+  const ctx=[{role:'user',content:RULES+'\n\nGÜNCEL PLAN VERİSİ (sayfadan):\n'+contextText()}].concat(SOLVI.turns.slice(-8));
+  const ctl=new AbortController(); SOLVI.ctl=ctl;
+  try{
+    const res=await fn(ctx,fn.proxy?{signal:ctl.signal,onText:({text})=>{ think.classList.remove('think'); think.textContent=text; }}:{cache:false,signal:ctl.signal,modelTier:'quick',tools:solviTools(),onText:({text})=>{ think.classList.remove('think'); think.textContent=text; $('#solviLog').scrollTop=1e9; }});
+    think.classList.remove('think'); think.textContent=res.text; SOLVI.turns.push({role:'assistant',content:res.text});
+  }catch(e){
+    const code=e&&e.code; think.classList.remove('think');
+    if(code==='not_granted'||code==='sampling_disabled'||code==='not_declared'||code==='capability_disabled'){ SOLVI.sampleFn=null; $('#solviSt').textContent='Çevrimdışı — sayfanın hesabından cevaplıyor'; think.textContent=localAnswer(q); }
+    else if(code==='cancelled'){ think.textContent=(e.text||'')+' (durduruldu)'; SOLVI.turns.pop(); }
+    else if(code==='tools_unavailable'){ SOLVI.noTools=true; think.textContent=localAnswer(q); }
+    else { think.textContent=(e.text?e.text+' ':'')+'Solvi şu an cevap veremedi; sayfanın hesabı: '+localAnswer(q); SOLVI.turns.pop(); }
+  }
+  finish();
+}
+
+/* ===================== Yönlendirme ve başlangıç ===================== */
+const VIEWS={tahmin:['Taze Talep',renderTahmin,bindTahmin],yuk:['Araç Yük Planı',renderYuk,bindYuk],rota:['Rota · Mağaza Bırakma Planı',renderRota,bindRota],gunici:['Rota Üzerinde Yeniden Dağıtım',renderGunici,bindGunici],gun:['Gün Görünümü',renderGun,bindGun],senaryo:['Senaryolar',renderSenaryo,bindSenaryo]};
+function render(){
+  const v=VIEWS[S.view]?S.view:'yuk'; const [title,rf,bf]=VIEWS[v];
+  $('#main').innerHTML=rf(); bf();
+  $('#crumb').innerHTML='ATS Food / Taze Yönetimi / <b>'+title+'</b>';
+  document.querySelectorAll('.side a[data-v]').forEach(a=>a.classList.toggle('on',a.dataset.v===v));
+  if(SOLVI.open)renderQs();
+}
+function route(){ const h=(location.hash||'#yuk').replace('#',''); if(h!==S.view) stopPlay(); S.view=VIEWS[h]?h:'yuk'; render(); window.scrollTo(0,0); }
+window.addEventListener('hashchange',route);
+document.querySelectorAll('.side a.dim').forEach(a=>a.onclick=e=>{e.preventDefault();toast('Bu modül demo kapsamı dışında');});
+$('#solviBtn').onclick=()=>{ if(SOLVI.open)closeSolvi(); else openSolvi(); };
+$('#solviClose').onclick=closeSolvi;
+$('#solviSend').onclick=()=>askSolvi($('#solviIn').value.trim());
+$('#solviIn').addEventListener('keydown',e=>{ if(e.key==='Enter')askSolvi($('#solviIn').value.trim()); });
+$('#solviStop').onclick=()=>{ if(SOLVI.ctl)SOLVI.ctl.abort(); };
+(function theme(){ let t=null; try{t=localStorage.getItem('ats-theme');}catch(e){} if(t)document.documentElement.dataset.theme=t; $('#themeBtn').onclick=()=>{ const cur=document.documentElement.dataset.theme; const dark=cur?cur==='dark':window.matchMedia('(prefers-color-scheme: dark)').matches; const nt=dark?'light':'dark'; document.documentElement.dataset.theme=nt; try{localStorage.setItem('ats-theme',nt);}catch(e){} }; })();
+document.querySelectorAll('.side .gh').forEach(b=>b.onclick=()=>b.parentElement.classList.toggle('open'));
+$('#sideTgl').onclick=()=>{ const app=document.querySelector('.app'); if(window.innerWidth<=760) app.classList.toggle('showside'); else app.classList.toggle('collapsed'); };
+route();
+</script>
+</body>
+</html>
